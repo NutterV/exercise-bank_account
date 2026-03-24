@@ -23,3 +23,7 @@
 - Trigger: Formal layering is introduced inside `producer` or `tracker`.
   Rule: Keep `domain` and `application` independent from transport, broker bootstrap, and REST controller concerns; place those details under `infrastructure` or `api`.
   Expected validation: Domain/application code remains testable without framework-heavy setup and adapters stay at the boundary.
+
+- Trigger: Adding or reshaping Java runtime/bootstrap classes, configuration helpers, or non-obvious value objects.
+  Rule: Add concise Javadocs to classes and public or package-level methods when their role, lifecycle, or configuration contract is not immediately obvious from the signature alone.
+  Expected validation: Java source explains the purpose of bootstrap/configuration code without requiring readers to infer behavior from implementation details.

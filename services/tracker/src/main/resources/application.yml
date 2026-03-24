@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: tracker
+
+bank-account:
+  messaging:
+    transaction-queue: bank-account.transactions
+    audit-queue: bank-account.audit

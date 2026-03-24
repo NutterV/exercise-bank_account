@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: producer
+
+bank-account:
+  producer:
+    credits-per-second: 25
+    debits-per-second: 25
+  messaging:
+    transaction-queue: bank-account.transactions
+    audit-queue: bank-account.audit

@@ -1,16 +1,24 @@
 package com.exercise.bankaccount.audit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+/**
+ * Boots the mocked audit application and begins consuming audit submissions from the broker.
+ */
 public final class AuditMain {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuditMain.class);
 
     private AuditMain() {
     }
 
-    public static void main(String[] args) {
-        LOGGER.info("Mocked audit stub starting");
+    /**
+     * Starts the audit listener using runtime properties resolved from system properties or environment variables.
+     *
+     * @param args unused command-line arguments
+     * @throws Exception if broker connection or message processing fails
+     */
+    public static void main(String[] args) throws Exception {
+        AuditRuntimeProperties properties = AuditRuntimeProperties.fromSystem();
+        AuditSubmissionListener listener = new AuditSubmissionListener(new AuditConsoleFormatter());
+        Runtime.getRuntime().addShutdownHook(new Thread(listener::close, "audit-shutdown"));
+        listener.start(properties);
+        listener.awaitShutdown();
     }
 }

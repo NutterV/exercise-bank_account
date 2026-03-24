@@ -1,0 +1,1 @@
+read .ai/rules/guidelines.md

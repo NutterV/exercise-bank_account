@@ -27,3 +27,11 @@
 - Trigger: Adding or reshaping Java runtime/bootstrap classes, configuration helpers, or non-obvious value objects.
   Rule: Add concise Javadocs to classes and public or package-level methods when their role, lifecycle, or configuration contract is not immediately obvious from the signature alone.
   Expected validation: Java source explains the purpose of bootstrap/configuration code without requiring readers to infer behavior from implementation details.
+
+- Trigger: The user asks for Java documentation on an existing utility they already own.
+  Rule: Limit the edit to Javadocs or other requested documentation unless the user explicitly asks for behavioral changes too.
+  Expected validation: The utility's implementation stays intact and only the requested documentation changes are introduced.
+
+- Trigger: A user asks to document or amend a file after prior edits or rejected changes.
+  Rule: Re-read the current on-disk file immediately before patching and base the edit on that exact content.
+  Expected validation: The patch matches the live file structure and does not describe or modify stale content.

@@ -1,11 +1,15 @@
 spring:
   application:
     name: producer
+  artemis:
+    broker-url: tcp://127.0.0.1:61616
 
 bank-account:
   producer:
     credits-per-second: 25
     debits-per-second: 25
+    minimum-amount: 200
+    maximum-amount: 500000
   messaging:
     transaction-queue: bank-account.transactions
     audit-queue: bank-account.audit

@@ -1,0 +1,30 @@
+package com.exercise.bankaccount.tracker.infrastructure;
+
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.exercise.bankaccount.common.model.Transaction;
+import com.exercise.bankaccount.tracker.api.BankAccountService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.jms.TextMessage;
+import java.math.BigDecimal;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+class TransactionMessageListenerTest {
+
+	@Test
+	void shouldDeserializeTransactionAndForwardToService() throws Exception {
+		BankAccountService bankAccountService = Mockito.mock(BankAccountService.class);
+		ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+		TransactionMessageListener listener = new TransactionMessageListener(bankAccountService, objectMapper);
+		Transaction transaction = new Transaction(UUID.randomUUID(), BigDecimal.valueOf(250));
+		TextMessage message = Mockito.mock(TextMessage.class);
+		when(message.getText()).thenReturn(objectMapper.writeValueAsString(transaction));
+
+		listener.onMessage(message);
+
+		verify(bankAccountService).processTransaction(transaction);
+	}
+}

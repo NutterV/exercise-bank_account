@@ -1,14 +1,14 @@
 package com.exercise.bankaccount.tracker.application.submission;
 
 import com.exercise.bankaccount.common.model.Transaction;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Fixed-size transaction window that becomes sealed once it reaches its configured capacity.
+ * Fixed-size transaction window that becomes sealed once it reaches its
+ * configured capacity.
  */
 public final class SubmissionBuffer {
 	private final int id;
@@ -17,8 +17,10 @@ public final class SubmissionBuffer {
 	private final AtomicBoolean dispatched = new AtomicBoolean();
 
 	/**
-	 * @param id       stable identifier used only for diagnostics
-	 * @param capacity maximum number of transactions the buffer can hold before sealing
+	 * @param id
+	 *            stable identifier used only for diagnostics
+	 * @param capacity
+	 *            maximum number of transactions the buffer can hold before sealing
 	 */
 	public SubmissionBuffer(int id, int capacity) {
 		this.id = id;
@@ -35,8 +37,10 @@ public final class SubmissionBuffer {
 	/**
 	 * Attempts to append a transaction into the next free slot.
 	 *
-	 * @param transaction transaction to append
-	 * @return append status indicating whether the buffer stayed open, just sealed, or was already full
+	 * @param transaction
+	 *            transaction to append
+	 * @return append status indicating whether the buffer stayed open, just sealed,
+	 *         or was already full
 	 */
 	public AppendResult tryAppend(Transaction transaction) {
 		int slot = size.getAndIncrement();
@@ -50,7 +54,8 @@ public final class SubmissionBuffer {
 	}
 
 	/**
-	 * Marks this buffer as already scheduled so multiple threads do not dispatch it twice.
+	 * Marks this buffer as already scheduled so multiple threads do not dispatch it
+	 * twice.
 	 *
 	 * @return {@code true} when this caller won dispatch ownership
 	 */
@@ -59,7 +64,8 @@ public final class SubmissionBuffer {
 	}
 
 	/**
-	 * Copies the sealed buffer contents into an immutable submission view for downstream processing.
+	 * Copies the sealed buffer contents into an immutable submission view for
+	 * downstream processing.
 	 *
 	 * @return immutable list of the buffered transactions
 	 */

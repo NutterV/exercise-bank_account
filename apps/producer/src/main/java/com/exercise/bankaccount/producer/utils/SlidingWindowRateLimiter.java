@@ -3,8 +3,8 @@ package com.exercise.bankaccount.producer.utils;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Sliding-window rate limiter that tracks request timestamps per key and decides whether another request is allowed
- * within the configured time window.
+ * Sliding-window rate limiter that tracks request timestamps per key and
+ * decides whether another request is allowed within the configured time window.
  */
 public class SlidingWindowRateLimiter {
 	private final int maxRequests;
@@ -12,10 +12,14 @@ public class SlidingWindowRateLimiter {
 	private final ConcurrentHashMap<String, RequestRate> requestTracker = new ConcurrentHashMap<>();
 
 	/**
-	 * Creates a rate limiter with a maximum number of requests allowed per key inside a rolling time window.
+	 * Creates a rate limiter with a maximum number of requests allowed per key
+	 * inside a rolling time window.
 	 *
-	 * @param maxRequests  maximum number of tracked requests allowed in the window for a single key
-	 * @param windowMillis rolling window size in milliseconds
+	 * @param maxRequests
+	 *            maximum number of tracked requests allowed in the window for a
+	 *            single key
+	 * @param windowMillis
+	 *            rolling window size in milliseconds
 	 */
 	public SlidingWindowRateLimiter(int maxRequests, long windowMillis) {
 		if (maxRequests <= 0) {
@@ -31,9 +35,12 @@ public class SlidingWindowRateLimiter {
 	/**
 	 * Attempts to record a request for the given key at the supplied time.
 	 *
-	 * @param key       logical rate-limiting key
-	 * @param nowMillis current timestamp in milliseconds
-	 * @return {@code true} when the request is within the allowed rate, otherwise {@code false}
+	 * @param key
+	 *            logical rate-limiting key
+	 * @param nowMillis
+	 *            current timestamp in milliseconds
+	 * @return {@code true} when the request is within the allowed rate, otherwise
+	 *         {@code false}
 	 */
 	public boolean allow(String key, long nowMillis) {
 		final RequestRate requestRate = requestTracker.computeIfAbsent(key, k -> new RequestRate(maxRequests));
@@ -52,14 +59,16 @@ public class SlidingWindowRateLimiter {
 	}
 
 	/**
-	 * Removes expired request history and drops keys that no longer have any tracked requests.
+	 * Removes expired request history and drops keys that no longer have any
+	 * tracked requests.
 	 *
-	 * @param nowMillis current timestamp in milliseconds
+	 * @param nowMillis
+	 *            current timestamp in milliseconds
 	 */
 	public void cleanup(long nowMillis) {
 		final long threshold = nowMillis - windowMillis;
 		requestTracker.forEach((key, requestRate) -> {
-			//noinspection SynchronizationOnLocalVariableOrMethodParameter
+			// noinspection SynchronizationOnLocalVariableOrMethodParameter
 			synchronized (requestRate) {
 				requestRate.evictExpiredUnderLock(threshold);
 				if (requestRate.trackedRequestCount == 0) {
@@ -70,7 +79,8 @@ public class SlidingWindowRateLimiter {
 	}
 
 	/**
-	 * Per-key ring buffer of request timestamps used while holding the enclosing monitor lock.
+	 * Per-key ring buffer of request timestamps used while holding the enclosing
+	 * monitor lock.
 	 */
 	private static final class RequestRate {
 		private final long[] buffer;
@@ -78,16 +88,19 @@ public class SlidingWindowRateLimiter {
 		private int trackedRequestCount = 0;
 
 		/**
-		 * @param capacity maximum number of timestamps that need to be tracked for the key
+		 * @param capacity
+		 *            maximum number of timestamps that need to be tracked for the key
 		 */
 		RequestRate(int capacity) {
 			this.buffer = new long[capacity];
 		}
 
 		/**
-		 * Adds a request timestamp to the ring buffer while the caller already holds the lock.
+		 * Adds a request timestamp to the ring buffer while the caller already holds
+		 * the lock.
 		 *
-		 * @param now request timestamp in milliseconds
+		 * @param now
+		 *            request timestamp in milliseconds
 		 */
 		void addUnderLock(long now) {
 			final int nextWriteIndex = toBufferIndex(oldestIndex + trackedRequestCount);
@@ -98,7 +111,8 @@ public class SlidingWindowRateLimiter {
 		/**
 		 * Evicts request timestamps that have fallen outside the active sliding window.
 		 *
-		 * @param threshold timestamps less than or equal to this value are considered expired
+		 * @param threshold
+		 *            timestamps less than or equal to this value are considered expired
 		 */
 		void evictExpiredUnderLock(long threshold) {
 			while (trackedRequestCount > 0) {
@@ -114,7 +128,8 @@ public class SlidingWindowRateLimiter {
 		/**
 		 * Maps a logical ring-buffer position onto the backing array.
 		 *
-		 * @param logicalIndex logical offset into the ring buffer
+		 * @param logicalIndex
+		 *            logical offset into the ring buffer
 		 * @return physical array index
 		 */
 		private int toBufferIndex(int logicalIndex) {

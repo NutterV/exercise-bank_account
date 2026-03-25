@@ -11,11 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/balances")
 public class BalanceController {
-
 	private final BankAccountService bankAccountService;
 
 	/**
-	 * @param bankAccountService service that owns the live balance state
+	 * @param bankAccountService
+	 *            service that owns the live balance state
 	 */
 	public BalanceController(BankAccountService bankAccountService) {
 		this.bankAccountService = bankAccountService;

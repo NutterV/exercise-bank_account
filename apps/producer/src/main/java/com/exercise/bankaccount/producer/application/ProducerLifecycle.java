@@ -1,6 +1,9 @@
 package com.exercise.bankaccount.producer.application;
 
 import jakarta.annotation.PreDestroy;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -8,26 +11,20 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 /**
- * Starts the dedicated producer threads required by the exercise and shuts them down with the application.
+ * Starts the dedicated producer threads required by the exercise and shuts them
+ * down with the application.
  */
 @Service
 public class ProducerLifecycle implements ApplicationRunner {
-
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProducerLifecycle.class);
 
 	private final TransactionProducerWorker creditWorker;
 	private final TransactionProducerWorker debitWorker;
 	private ExecutorService executorService;
 
-	public ProducerLifecycle(
-		@Qualifier("creditWorker") TransactionProducerWorker creditWorker,
-		@Qualifier("debitWorker") TransactionProducerWorker debitWorker
-	) {
+	public ProducerLifecycle(@Qualifier("creditWorker") TransactionProducerWorker creditWorker,
+			@Qualifier("debitWorker") TransactionProducerWorker debitWorker) {
 		this.creditWorker = creditWorker;
 		this.debitWorker = debitWorker;
 	}

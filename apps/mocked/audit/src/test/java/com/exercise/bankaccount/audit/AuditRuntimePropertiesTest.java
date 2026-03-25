@@ -1,11 +1,10 @@
 package com.exercise.bankaccount.audit;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class AuditRuntimePropertiesTest {
+import org.junit.jupiter.api.Test;
 
+class AuditRuntimePropertiesTest {
 	@Test
 	void shouldDefaultBrokerUrlAndQueue() {
 		AuditRuntimeProperties properties = new AuditRuntimeProperties(null, "");

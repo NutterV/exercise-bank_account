@@ -12,39 +12,22 @@ import org.springframework.context.annotation.Configuration;
 public class TransactionWorkerConfiguration {
 	@Bean
 	TransactionFactory transactionFactory(ProducerProperties producerProperties) {
-		return new TransactionFactory(
-			producerProperties.minimumAmount(),
-			producerProperties.maximumAmount()
-		);
+		return new TransactionFactory(producerProperties.minimumAmount(), producerProperties.maximumAmount());
 	}
 
 	@Bean
-	TransactionProducerWorker creditWorker(
-		ProducerProperties producerProperties,
-		TransactionFactory transactionFactory,
-		TransactionPublisher transactionPublisher
-	) {
-		return new TransactionProducerWorker(
-			"producer-credit-thread",
-			TransactionDirection.CREDIT,
-			new SlidingWindowRateLimiter(producerProperties.creditsPerSecond(), 1_000L),
-			transactionFactory,
-			transactionPublisher
-		);
+	TransactionProducerWorker creditWorker(ProducerProperties producerProperties, TransactionFactory transactionFactory,
+			TransactionPublisher transactionPublisher) {
+		return new TransactionProducerWorker("producer-credit-thread", TransactionDirection.CREDIT,
+				new SlidingWindowRateLimiter(producerProperties.creditsPerSecond(), 1_000L), transactionFactory,
+				transactionPublisher);
 	}
 
 	@Bean
-	TransactionProducerWorker debitWorker(
-		ProducerProperties producerProperties,
-		TransactionFactory transactionFactory,
-		TransactionPublisher transactionPublisher
-	) {
-		return new TransactionProducerWorker(
-			"producer-debit-thread",
-			TransactionDirection.DEBIT,
-			new SlidingWindowRateLimiter(producerProperties.debitsPerSecond(), 1_000L),
-			transactionFactory,
-			transactionPublisher
-		);
+	TransactionProducerWorker debitWorker(ProducerProperties producerProperties, TransactionFactory transactionFactory,
+			TransactionPublisher transactionPublisher) {
+		return new TransactionProducerWorker("producer-debit-thread", TransactionDirection.DEBIT,
+				new SlidingWindowRateLimiter(producerProperties.debitsPerSecond(), 1_000L), transactionFactory,
+				transactionPublisher);
 	}
 }

@@ -1,16 +1,15 @@
 package com.exercise.bankaccount.broker;
 
+import java.util.concurrent.CountDownLatch;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.CountDownLatch;
-
 /**
- * Starts and keeps alive the mocked embedded Artemis broker process used for local integration.
+ * Starts and keeps alive the mocked embedded Artemis broker process used for
+ * local integration.
  */
 public final class BrokerMain {
-
 	private static final Logger LOGGER = LoggerFactory.getLogger(BrokerMain.class);
 	private static final CountDownLatch SHUTDOWN_LATCH = new CountDownLatch(1);
 
@@ -18,10 +17,13 @@ public final class BrokerMain {
 	}
 
 	/**
-	 * Boots the embedded broker using runtime properties resolved from system properties or environment variables.
+	 * Boots the embedded broker using runtime properties resolved from system
+	 * properties or environment variables.
 	 *
-	 * @param args unused command-line arguments
-	 * @throws Exception if broker configuration or startup fails
+	 * @param args
+	 *            unused command-line arguments
+	 * @throws Exception
+	 *             if broker configuration or startup fails
 	 */
 	public static void main(String[] args) throws Exception {
 		BrokerRuntimeProperties properties = BrokerRuntimeProperties.fromSystem();
@@ -39,7 +41,8 @@ public final class BrokerMain {
 	/**
 	 * Stops the embedded broker during JVM shutdown.
 	 *
-	 * @param broker running broker instance
+	 * @param broker
+	 *            running broker instance
 	 */
 	private static void stopBroker(EmbeddedActiveMQ broker) {
 		try {

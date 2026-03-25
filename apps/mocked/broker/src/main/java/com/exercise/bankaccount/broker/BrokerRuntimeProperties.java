@@ -1,14 +1,17 @@
 package com.exercise.bankaccount.broker;
 
 /**
- * Runtime settings for the mocked broker resolved from system properties or environment variables.
+ * Runtime settings for the mocked broker resolved from system properties or
+ * environment variables.
  *
- * @param host TCP host exposed by the broker
- * @param port TCP port exposed by the broker
- * @param vmId in-vm broker identifier for same-JVM clients
+ * @param host
+ *            TCP host exposed by the broker
+ * @param port
+ *            TCP port exposed by the broker
+ * @param vmId
+ *            in-vm broker identifier for same-JVM clients
  */
 record BrokerRuntimeProperties(String host, int port, int vmId) {
-
 	private static final String HOST_PROPERTY = "bank.account.broker.host";
 	private static final String PORT_PROPERTY = "bank.account.broker.port";
 	private static final String VM_ID_PROPERTY = "bank.account.broker.vm-id";
@@ -24,16 +27,14 @@ record BrokerRuntimeProperties(String host, int port, int vmId) {
 	}
 
 	/**
-	 * Resolves broker runtime settings from JVM system properties first, then environment variables.
+	 * Resolves broker runtime settings from JVM system properties first, then
+	 * environment variables.
 	 *
 	 * @return normalized broker runtime properties
 	 */
 	static BrokerRuntimeProperties fromSystem() {
-		return new BrokerRuntimeProperties(
-			readString(HOST_PROPERTY, HOST_ENV),
-			readInt(PORT_PROPERTY, PORT_ENV, 61616),
-			readInt(VM_ID_PROPERTY, VM_ID_ENV, 0)
-		);
+		return new BrokerRuntimeProperties(readString(HOST_PROPERTY, HOST_ENV), readInt(PORT_PROPERTY, PORT_ENV, 61616),
+				readInt(VM_ID_PROPERTY, VM_ID_ENV, 0));
 	}
 
 	private static String readString(String propertyName, String environmentName) {

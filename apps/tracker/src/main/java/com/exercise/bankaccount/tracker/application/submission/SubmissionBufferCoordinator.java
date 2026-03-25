@@ -2,18 +2,17 @@ package com.exercise.bankaccount.tracker.application.submission;
 
 import com.exercise.bankaccount.common.model.Transaction;
 import com.exercise.bankaccount.tracker.application.config.TrackerSubmissionProperties;
-import org.springframework.stereotype.Component;
-
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import org.springframework.stereotype.Component;
 
 /**
- * Owns the active submission buffer, buffer-pool growth, and asynchronous dispatch of sealed buffers.
+ * Owns the active submission buffer, buffer-pool growth, and asynchronous
+ * dispatch of sealed buffers.
  */
 @Component
 public class SubmissionBufferCoordinator {
-
 	private final SubmissionProcessor submissionProcessor;
 	private final LinkedBlockingQueue<SubmissionBuffer> availableBuffers = new LinkedBlockingQueue<>();
 	private final AtomicReference<SubmissionBuffer> activeBuffer;
@@ -22,37 +21,35 @@ public class SubmissionBufferCoordinator {
 	private final int maxBufferCount;
 
 	/**
-	 * Creates the production coordinator using the configured submission and pool settings.
+	 * Creates the production coordinator using the configured submission and pool
+	 * settings.
 	 *
-	 * @param submissionProcessor background processor for completed submission windows
-	 * @param trackerSubmissionProperties configured submission-window and buffer-pool sizing
+	 * @param submissionProcessor
+	 *            background processor for completed submission windows
+	 * @param trackerSubmissionProperties
+	 *            configured submission-window and buffer-pool sizing
 	 */
-	public SubmissionBufferCoordinator(
-		SubmissionProcessor submissionProcessor,
-		TrackerSubmissionProperties trackerSubmissionProperties
-	) {
-		this(
-			submissionProcessor,
-			trackerSubmissionProperties.submissionSize(),
-			trackerSubmissionProperties.initialBufferCount(),
-			trackerSubmissionProperties.maxBufferCount()
-		);
+	public SubmissionBufferCoordinator(SubmissionProcessor submissionProcessor,
+			TrackerSubmissionProperties trackerSubmissionProperties) {
+		this(submissionProcessor, trackerSubmissionProperties.submissionSize(),
+				trackerSubmissionProperties.initialBufferCount(), trackerSubmissionProperties.maxBufferCount());
 	}
 
 	/**
-	 * Test-friendly constructor that allows the buffer-pool and executor strategy to be controlled explicitly.
+	 * Test-friendly constructor that allows the buffer-pool and executor strategy
+	 * to be controlled explicitly.
 	 *
-	 * @param submissionProcessor handler for completed submission windows
-	 * @param submissionSize number of transactions required to seal one submission buffer
-	 * @param initialBufferCount number of buffers available before the pool needs to grow
-	 * @param maxBufferCount upper bound for dynamic buffer-pool growth
+	 * @param submissionProcessor
+	 *            handler for completed submission windows
+	 * @param submissionSize
+	 *            number of transactions required to seal one submission buffer
+	 * @param initialBufferCount
+	 *            number of buffers available before the pool needs to grow
+	 * @param maxBufferCount
+	 *            upper bound for dynamic buffer-pool growth
 	 */
-	public SubmissionBufferCoordinator(
-		SubmissionProcessor submissionProcessor,
-		int submissionSize,
-		int initialBufferCount,
-		int maxBufferCount
-	) {
+	public SubmissionBufferCoordinator(SubmissionProcessor submissionProcessor, int submissionSize,
+			int initialBufferCount, int maxBufferCount) {
 		this.submissionProcessor = submissionProcessor;
 		this.submissionSize = submissionSize;
 		this.maxBufferCount = maxBufferCount;
@@ -70,9 +67,11 @@ public class SubmissionBufferCoordinator {
 	}
 
 	/**
-	 * Appends a transaction to the current active submission buffer and rotates buffers when one seals.
+	 * Appends a transaction to the current active submission buffer and rotates
+	 * buffers when one seals.
 	 *
-	 * @param transaction transaction to record in the current submission window
+	 * @param transaction
+	 *            transaction to record in the current submission window
 	 */
 	public void record(Transaction transaction) {
 		while (true) {
@@ -90,9 +89,11 @@ public class SubmissionBufferCoordinator {
 	}
 
 	/**
-	 * Ensures the sealed buffer is no longer active and then schedules it for background processing.
+	 * Ensures the sealed buffer is no longer active and then schedules it for
+	 * background processing.
 	 *
-	 * @param sealedBuffer buffer that just reached the configured submission size
+	 * @param sealedBuffer
+	 *            buffer that just reached the configured submission size
 	 */
 	private void rotateAndDispatch(SubmissionBuffer sealedBuffer) {
 		rotateIfNecessary(sealedBuffer);
@@ -101,7 +102,8 @@ public class SubmissionBufferCoordinator {
 	/**
 	 * Swaps the current active buffer with a recyclable or newly created buffer.
 	 *
-	 * @param fullBuffer buffer that can no longer accept transactions
+	 * @param fullBuffer
+	 *            buffer that can no longer accept transactions
 	 */
 	private void rotateIfNecessary(SubmissionBuffer fullBuffer) {
 		while (activeBuffer.get() == fullBuffer) {
@@ -115,9 +117,11 @@ public class SubmissionBufferCoordinator {
 	}
 
 	/**
-	 * Schedules one sealed buffer for background processing and returns it to the pool afterward.
+	 * Schedules one sealed buffer for background processing and returns it to the
+	 * pool afterward.
 	 *
-	 * @param sealedBuffer completed submission buffer
+	 * @param sealedBuffer
+	 *            completed submission buffer
 	 */
 	private void dispatchIfNeeded(SubmissionBuffer sealedBuffer) {
 		if (!sealedBuffer.markDispatched()) {
@@ -133,7 +137,8 @@ public class SubmissionBufferCoordinator {
 	}
 
 	/**
-	 * Gets the next writable buffer, preferring recycled buffers and growing the pool only when needed.
+	 * Gets the next writable buffer, preferring recycled buffers and growing the
+	 * pool only when needed.
 	 *
 	 * @return buffer ready to become the new active submission window
 	 */
@@ -159,7 +164,8 @@ public class SubmissionBufferCoordinator {
 	/**
 	 * Returns a reset buffer to the recyclable pool.
 	 *
-	 * @param buffer buffer ready for reuse
+	 * @param buffer
+	 *            buffer ready for reuse
 	 */
 	private void releaseBuffer(SubmissionBuffer buffer) {
 		availableBuffers.offer(buffer);

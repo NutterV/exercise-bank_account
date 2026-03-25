@@ -1,15 +1,14 @@
 package com.exercise.bankaccount.tracker.application.config;
 
 import java.math.BigDecimal;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Runtime settings for tracker-side submission buffering and pool growth.
  */
 @ConfigurationProperties(prefix = "bank-account.tracker.submission")
-public record TrackerSubmissionProperties(int submissionSize, int initialBufferCount, int maxBufferCount, BigDecimal maxBatchTotal) {
-
+public record TrackerSubmissionProperties(int submissionSize, int initialBufferCount, int maxBufferCount,
+		BigDecimal maxBatchTotal) {
 	private static final int DEFAULT_SUBMISSION_SIZE = 1_000;
 	private static final int DEFAULT_INITIAL_BUFFER_COUNT = 2;
 	private static final int DEFAULT_MAX_BUFFER_COUNT = 10;

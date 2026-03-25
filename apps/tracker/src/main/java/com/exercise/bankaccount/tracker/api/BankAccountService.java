@@ -3,14 +3,16 @@ package com.exercise.bankaccount.tracker.api;
 import com.exercise.bankaccount.common.model.Transaction;
 
 /**
- * Service to aggregate transactions tracking the overall balance for an account.
+ * Service to aggregate transactions tracking the overall balance for an
+ * account.
  */
 public interface BankAccountService {
-
 	/**
 	 * Process a given transaction.
 	 *
-	 * @param transaction transaction to process and fold into the current balance and audit window
+	 * @param transaction
+	 *            transaction to process and fold into the current balance and audit
+	 *            window
 	 */
 	void processTransaction(Transaction transaction);
 

@@ -1,11 +1,10 @@
 package com.exercise.bankaccount.broker;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class BrokerRuntimePropertiesTest {
+import org.junit.jupiter.api.Test;
 
+class BrokerRuntimePropertiesTest {
 	@Test
 	void shouldBuildDefaultUris() {
 		BrokerRuntimeProperties properties = new BrokerRuntimeProperties(null, 0, -1);

@@ -1,9 +1,11 @@
 package com.exercise.bankaccount.tracker.application.submission;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.exercise.bankaccount.common.model.AuditSubmission;
 import com.exercise.bankaccount.common.model.Transaction;
-import org.junit.jupiter.api.Test;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -12,23 +14,18 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 
 class SubmissionBatcherTest {
-
 	private static final BigDecimal TEST_MAX_BATCH_TOTAL = BigDecimal.valueOf(1_000_000);
 
 	@Test
 	void shouldKeepTransactionsInOneBatchWhenAbsoluteTotalFitsTheLimit() {
-		SubmissionBatcher submissionBatcher = new SubmissionBatcher(TEST_MAX_BATCH_TOTAL, auditSubmission -> { }, Executors.newSingleThreadExecutor());
+		SubmissionBatcher submissionBatcher = new SubmissionBatcher(TEST_MAX_BATCH_TOTAL, auditSubmission -> {
+		}, Executors.newSingleThreadExecutor());
 		try {
-			AuditSubmission submission = submissionBatcher.buildSubmission(List.of(
-				transaction("600000"),
-				transaction("-400000")
-			));
+			AuditSubmission submission = submissionBatcher
+					.buildSubmission(List.of(transaction("600000"), transaction("-400000")));
 
 			assertEquals(1, submission.batches().size());
 			assertEquals(new BigDecimal("1000000"), submission.batches().get(0).totalValueOfAllTransactions());
@@ -40,12 +37,11 @@ class SubmissionBatcherTest {
 
 	@Test
 	void shouldUseAbsoluteAmountsInsteadOfOffsettingCreditsAndDebits() {
-		SubmissionBatcher submissionBatcher = new SubmissionBatcher(TEST_MAX_BATCH_TOTAL, auditSubmission -> { }, Executors.newSingleThreadExecutor());
+		SubmissionBatcher submissionBatcher = new SubmissionBatcher(TEST_MAX_BATCH_TOTAL, auditSubmission -> {
+		}, Executors.newSingleThreadExecutor());
 		try {
-			AuditSubmission submission = submissionBatcher.buildSubmission(List.of(
-				transaction("600000"),
-				transaction("-500000")
-			));
+			AuditSubmission submission = submissionBatcher
+					.buildSubmission(List.of(transaction("600000"), transaction("-500000")));
 
 			assertEquals(2, submission.batches().size());
 			assertEquals(new BigDecimal("600000"), submission.batches().get(0).totalValueOfAllTransactions());
@@ -57,14 +53,11 @@ class SubmissionBatcherTest {
 
 	@Test
 	void shouldPackTransactionsToReduceBatchCount() {
-		SubmissionBatcher submissionBatcher = new SubmissionBatcher(TEST_MAX_BATCH_TOTAL, auditSubmission -> { }, Executors.newSingleThreadExecutor());
+		SubmissionBatcher submissionBatcher = new SubmissionBatcher(TEST_MAX_BATCH_TOTAL, auditSubmission -> {
+		}, Executors.newSingleThreadExecutor());
 		try {
-			AuditSubmission submission = submissionBatcher.buildSubmission(List.of(
-				transaction("600000"),
-				transaction("400000"),
-				transaction("600000"),
-				transaction("400000")
-			));
+			AuditSubmission submission = submissionBatcher.buildSubmission(List.of(transaction("600000"),
+					transaction("400000"), transaction("600000"), transaction("400000")));
 
 			assertEquals(2, submission.batches().size());
 			assertEquals(new BigDecimal("1000000"), submission.batches().get(0).totalValueOfAllTransactions());
@@ -86,12 +79,8 @@ class SubmissionBatcherTest {
 			processed.countDown();
 		}, workerExecutor);
 		try {
-			submissionBatcher.processSubmission(List.of(
-				transaction("600000"),
-				transaction("400000"),
-				transaction("600000"),
-				transaction("400000")
-			));
+			submissionBatcher.processSubmission(List.of(transaction("600000"), transaction("400000"),
+					transaction("600000"), transaction("400000")));
 
 			assertTrue(processed.await(2, TimeUnit.SECONDS));
 			assertEquals(0, submissionBatcher.pendingSubmissionCount());
@@ -111,14 +100,12 @@ class SubmissionBatcherTest {
 			processed.countDown();
 		}, Executors.newSingleThreadExecutor());
 		try {
-			submissionBatcher.processSubmission(List.of(
-				transaction("600000"),
-				transaction("400000")
-			));
+			submissionBatcher.processSubmission(List.of(transaction("600000"), transaction("400000")));
 
 			assertTrue(processed.await(2, TimeUnit.SECONDS));
 			assertEquals(1, processedSubmissions.size());
-			assertEquals(new BigDecimal("1000000"), processedSubmissions.get(0).batches().get(0).totalValueOfAllTransactions());
+			assertEquals(new BigDecimal("1000000"),
+					processedSubmissions.get(0).batches().get(0).totalValueOfAllTransactions());
 		} finally {
 			submissionBatcher.shutdown();
 		}
@@ -137,18 +124,13 @@ class SubmissionBatcherTest {
 			processed.countDown();
 		}, Executors.newSingleThreadExecutor());
 		try {
-			submissionBatcher.processSubmission(List.of(
-				transaction("600000"),
-				transaction("400000")
-			));
-			submissionBatcher.processSubmission(List.of(
-				transaction("500000"),
-				transaction("300000")
-			));
+			submissionBatcher.processSubmission(List.of(transaction("600000"), transaction("400000")));
+			submissionBatcher.processSubmission(List.of(transaction("500000"), transaction("300000")));
 
 			assertTrue(processed.await(2, TimeUnit.SECONDS));
 			assertEquals(1, processedSubmissions.size());
-			assertEquals(new BigDecimal("800000"), processedSubmissions.get(0).batches().get(0).totalValueOfAllTransactions());
+			assertEquals(new BigDecimal("800000"),
+					processedSubmissions.get(0).batches().get(0).totalValueOfAllTransactions());
 		} finally {
 			submissionBatcher.shutdown();
 		}
@@ -156,12 +138,11 @@ class SubmissionBatcherTest {
 
 	@Test
 	void shouldRejectTransactionsThatExceedTheBatchLimitOnTheirOwn() {
-		SubmissionBatcher submissionBatcher = new SubmissionBatcher(TEST_MAX_BATCH_TOTAL, auditSubmission -> { }, Executors.newSingleThreadExecutor());
+		SubmissionBatcher submissionBatcher = new SubmissionBatcher(TEST_MAX_BATCH_TOTAL, auditSubmission -> {
+		}, Executors.newSingleThreadExecutor());
 		try {
-			assertThrows(
-				IllegalArgumentException.class,
-				() -> submissionBatcher.buildSubmission(List.of(transaction("1000000.01")))
-			);
+			assertThrows(IllegalArgumentException.class,
+					() -> submissionBatcher.buildSubmission(List.of(transaction("1000000.01"))));
 		} finally {
 			submissionBatcher.shutdown();
 		}
@@ -169,13 +150,11 @@ class SubmissionBatcherTest {
 
 	@Test
 	void shouldUseConfiguredBatchLimit() {
-		SubmissionBatcher submissionBatcher = new SubmissionBatcher(BigDecimal.valueOf(700_000), auditSubmission -> { }, Executors.newSingleThreadExecutor());
+		SubmissionBatcher submissionBatcher = new SubmissionBatcher(BigDecimal.valueOf(700_000), auditSubmission -> {
+		}, Executors.newSingleThreadExecutor());
 		try {
-			AuditSubmission submission = submissionBatcher.buildSubmission(List.of(
-				transaction("400000"),
-				transaction("300000"),
-				transaction("300000")
-			));
+			AuditSubmission submission = submissionBatcher
+					.buildSubmission(List.of(transaction("400000"), transaction("300000"), transaction("300000")));
 
 			assertEquals(2, submission.batches().size());
 			assertEquals(new BigDecimal("700000"), submission.batches().get(0).totalValueOfAllTransactions());

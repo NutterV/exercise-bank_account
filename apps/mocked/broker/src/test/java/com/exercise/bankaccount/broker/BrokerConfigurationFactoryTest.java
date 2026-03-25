@@ -1,13 +1,12 @@
 package com.exercise.bankaccount.broker;
 
-import org.apache.activemq.artemis.core.config.Configuration;
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-class BrokerConfigurationFactoryTest {
+import org.apache.activemq.artemis.core.config.Configuration;
+import org.junit.jupiter.api.Test;
 
+class BrokerConfigurationFactoryTest {
 	@Test
 	void shouldCreateNonPersistentBrokerConfiguration() throws Exception {
 		BrokerRuntimeProperties properties = new BrokerRuntimeProperties("localhost", 61616, 7);

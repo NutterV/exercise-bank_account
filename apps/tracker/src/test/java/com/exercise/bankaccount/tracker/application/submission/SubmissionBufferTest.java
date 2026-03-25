@@ -1,18 +1,15 @@
 package com.exercise.bankaccount.tracker.application.submission;
 
-import com.exercise.bankaccount.common.model.Transaction;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.exercise.bankaccount.common.model.Transaction;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 
 class SubmissionBufferTest {
-
 	@Test
 	void shouldAppendSealAndThenReportFull() {
 		SubmissionBuffer buffer = new SubmissionBuffer(7, 2);

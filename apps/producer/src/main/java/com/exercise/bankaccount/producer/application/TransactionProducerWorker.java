@@ -3,17 +3,16 @@ package com.exercise.bankaccount.producer.application;
 import com.exercise.bankaccount.common.model.Transaction;
 import com.exercise.bankaccount.producer.domain.TransactionFactory;
 import com.exercise.bankaccount.producer.utils.SlidingWindowRateLimiter;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.LockSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.LockSupport;
-
 /**
- * Long-running worker that generates one transaction type and publishes it at a fixed rate.
+ * Long-running worker that generates one transaction type and publishes it at a
+ * fixed rate.
  */
 public class TransactionProducerWorker implements Runnable {
-
 	private static final Logger LOGGER = LoggerFactory.getLogger(TransactionProducerWorker.class);
 	private static final long RATE_LIMIT_BACKOFF_NANOS = 10_000_000L;
 
@@ -24,13 +23,9 @@ public class TransactionProducerWorker implements Runnable {
 	private final TransactionPublisher transactionPublisher;
 	private final AtomicBoolean running = new AtomicBoolean(true);
 
-	public TransactionProducerWorker(
-		String workerName,
-		TransactionDirection direction,
-		SlidingWindowRateLimiter rateLimiter,
-		TransactionFactory transactionFactory,
-		TransactionPublisher transactionPublisher
-	) {
+	public TransactionProducerWorker(String workerName, TransactionDirection direction,
+			SlidingWindowRateLimiter rateLimiter, TransactionFactory transactionFactory,
+			TransactionPublisher transactionPublisher) {
 		this.workerName = workerName;
 		this.direction = direction;
 		this.rateLimiter = rateLimiter;

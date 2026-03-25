@@ -14,12 +14,8 @@ public abstract class JmsPublisher<T> {
 	private final ObjectMapper objectMapper;
 	private final QueueType queueType;
 
-	public JmsPublisher(
-		JmsTemplate jmsTemplate,
-		MessagingProperties messagingProperties,
-		ObjectMapper objectMapper,
-		QueueType queueType
-	) {
+	public JmsPublisher(JmsTemplate jmsTemplate, MessagingProperties messagingProperties, ObjectMapper objectMapper,
+			QueueType queueType) {
 		this.jmsTemplate = jmsTemplate;
 		this.messagingProperties = messagingProperties;
 		this.objectMapper = objectMapper;
@@ -28,9 +24,6 @@ public abstract class JmsPublisher<T> {
 
 	public void publish(T t) throws Exception {
 		String payload = objectMapper.writeValueAsString(t);
-		jmsTemplate.send(
-			messagingProperties.queueName(queueType),
-			session -> session.createTextMessage(payload)
-		);
+		jmsTemplate.send(messagingProperties.queueName(queueType), session -> session.createTextMessage(payload));
 	}
 }

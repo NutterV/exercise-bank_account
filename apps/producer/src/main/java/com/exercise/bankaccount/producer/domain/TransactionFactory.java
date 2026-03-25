@@ -2,7 +2,6 @@ package com.exercise.bankaccount.producer.domain;
 
 import com.exercise.bankaccount.common.model.Transaction;
 import com.exercise.bankaccount.producer.application.TransactionDirection;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -11,7 +10,6 @@ import java.util.concurrent.ThreadLocalRandom;
  * Generates exercise-compliant transactions.
  */
 public class TransactionFactory {
-
 	private final long minimumAmount;
 	private final long maximumAmount;
 

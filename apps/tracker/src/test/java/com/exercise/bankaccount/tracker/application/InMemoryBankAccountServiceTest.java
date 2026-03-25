@@ -1,18 +1,15 @@
 package com.exercise.bankaccount.tracker.application;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.exercise.bankaccount.common.model.Transaction;
 import com.exercise.bankaccount.tracker.application.config.TrackerSubmissionProperties;
 import com.exercise.bankaccount.tracker.application.submission.SubmissionBufferCoordinator;
-import org.junit.jupiter.api.Test;
-
 import java.math.BigDecimal;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 
 class InMemoryBankAccountServiceTest {
-
 	@Test
 	void shouldKeepRunningBalanceOnAtomicAccumulatorWhileDelegatingSubmissionHandling() {
 		RecordingSubmissionBufferCoordinator coordinator = new RecordingSubmissionBufferCoordinator();
@@ -45,11 +42,11 @@ class InMemoryBankAccountServiceTest {
 	}
 
 	private static final class RecordingSubmissionBufferCoordinator extends SubmissionBufferCoordinator {
-
 		private final java.util.List<Transaction> recordedTransactions = new java.util.ArrayList<>();
 
 		private RecordingSubmissionBufferCoordinator() {
-			super(transactions -> { }, 1, 1, 1);
+			super(transactions -> {
+			}, 1, 1, 1);
 		}
 
 		@Override

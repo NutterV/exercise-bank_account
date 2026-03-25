@@ -1,12 +1,11 @@
 package com.exercise.bankaccount.producer.utils;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class SlidingWindowRateLimiterTest {
+import org.junit.jupiter.api.Test;
 
+class SlidingWindowRateLimiterTest {
 	@Test
 	void shouldRejectRequestsWhenWindowIsFull() {
 		SlidingWindowRateLimiter limiter = new SlidingWindowRateLimiter(2, 1_000L);

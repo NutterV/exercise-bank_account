@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 class TransactionMessageListenerTest {
-
 	@Test
 	void shouldDeserializeTransactionAndForwardToService() throws Exception {
 		BankAccountService bankAccountService = Mockito.mock(BankAccountService.class);

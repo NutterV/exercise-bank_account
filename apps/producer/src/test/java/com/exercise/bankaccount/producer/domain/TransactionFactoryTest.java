@@ -1,19 +1,15 @@
 package com.exercise.bankaccount.producer.domain;
 
-import com.exercise.bankaccount.common.model.Transaction;
-import com.exercise.bankaccount.producer.application.TransactionDirection;
-import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
-
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class TransactionFactoryTest {
+import com.exercise.bankaccount.common.model.Transaction;
+import com.exercise.bankaccount.producer.application.TransactionDirection;
+import java.math.BigDecimal;
+import org.junit.jupiter.api.Test;
 
-	private final TransactionFactory transactionFactory = new TransactionFactory(
-		BigDecimal.valueOf(200),
-		BigDecimal.valueOf(500000)
-	);
+class TransactionFactoryTest {
+	private final TransactionFactory transactionFactory = new TransactionFactory(BigDecimal.valueOf(200),
+			BigDecimal.valueOf(500000));
 
 	@Test
 	void shouldCreateCreditTransactionsInConfiguredRange() {

@@ -13,17 +13,16 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class BatchedSubmissionPublisher extends JmsPublisher<AuditSubmission> {
-
 	/**
-	 * @param jmsTemplate JMS template used to send audit submissions
-	 * @param messagingProperties configured broker destinations
-	 * @param objectMapper mapper used to serialize audit submissions
+	 * @param jmsTemplate
+	 *            JMS template used to send audit submissions
+	 * @param messagingProperties
+	 *            configured broker destinations
+	 * @param objectMapper
+	 *            mapper used to serialize audit submissions
 	 */
-	public BatchedSubmissionPublisher(
-		JmsTemplate jmsTemplate,
-		MessagingProperties messagingProperties,
-		ObjectMapper objectMapper
-	) {
+	public BatchedSubmissionPublisher(JmsTemplate jmsTemplate, MessagingProperties messagingProperties,
+			ObjectMapper objectMapper) {
 		super(jmsTemplate, messagingProperties, objectMapper, QueueType.AUDIT);
 	}
 }

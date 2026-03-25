@@ -3,11 +3,12 @@ package com.exercise.bankaccount.audit;
 /**
  * Runtime settings for the mocked audit application.
  *
- * @param brokerUrl  Artemis broker TCP endpoint
- * @param auditQueue queue from which audit submissions are consumed
+ * @param brokerUrl
+ *            Artemis broker TCP endpoint
+ * @param auditQueue
+ *            queue from which audit submissions are consumed
  */
 record AuditRuntimeProperties(String brokerUrl, String auditQueue) {
-
 	private static final String BROKER_URL_PROPERTY = "bank.account.audit.broker-url";
 	private static final String AUDIT_QUEUE_PROPERTY = "bank.account.audit.queue";
 
@@ -20,10 +21,8 @@ record AuditRuntimeProperties(String brokerUrl, String auditQueue) {
 	}
 
 	static AuditRuntimeProperties fromSystem() {
-		return new AuditRuntimeProperties(
-			readString(BROKER_URL_PROPERTY, BROKER_URL_ENV),
-			readString(AUDIT_QUEUE_PROPERTY, AUDIT_QUEUE_ENV)
-		);
+		return new AuditRuntimeProperties(readString(BROKER_URL_PROPERTY, BROKER_URL_ENV),
+				readString(AUDIT_QUEUE_PROPERTY, AUDIT_QUEUE_ENV));
 	}
 
 	private static String readString(String propertyName, String environmentName) {

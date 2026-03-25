@@ -10,9 +10,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class TransactionPublisher extends JmsPublisher<Transaction> {
-	public TransactionPublisher(
-		JmsTemplate jmsTemplate, MessagingProperties messagingProperties, ObjectMapper objectMapper
-	) {
+	public TransactionPublisher(JmsTemplate jmsTemplate, MessagingProperties messagingProperties,
+			ObjectMapper objectMapper) {
 		super(jmsTemplate, messagingProperties, objectMapper, QueueType.TRANSACTION);
 	}
 }

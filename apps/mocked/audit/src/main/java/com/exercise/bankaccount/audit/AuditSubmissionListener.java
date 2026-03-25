@@ -3,18 +3,17 @@ package com.exercise.bankaccount.audit;
 import com.exercise.bankaccount.common.model.AuditSubmission;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.jms.*;
+import java.util.concurrent.CountDownLatch;
 import org.apache.activemq.artemis.api.jms.ActiveMQJMSClient;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.CountDownLatch;
-
 /**
- * Connects to Artemis and prints each received audit submission in the mocked output format.
+ * Connects to Artemis and prints each received audit submission in the mocked
+ * output format.
  */
 final class AuditSubmissionListener implements AutoCloseable {
-
 	private static final Logger LOGGER = LoggerFactory.getLogger(AuditSubmissionListener.class);
 
 	private final ObjectMapper objectMapper;
@@ -30,7 +29,8 @@ final class AuditSubmissionListener implements AutoCloseable {
 	}
 
 	void start(AuditRuntimeProperties properties) throws Exception {
-		connectionFactory = ActiveMQJMSClient.createConnectionFactory(properties.brokerUrl(), "audit-connection-factory");
+		connectionFactory = ActiveMQJMSClient.createConnectionFactory(properties.brokerUrl(),
+				"audit-connection-factory");
 		connection = connectionFactory.createConnection();
 		session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 

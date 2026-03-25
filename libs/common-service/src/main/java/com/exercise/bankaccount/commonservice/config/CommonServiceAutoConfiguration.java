@@ -10,11 +10,9 @@ import org.springframework.context.annotation.Bean;
 @AutoConfiguration
 @EnableConfigurationProperties(MessagingProperties.class)
 public class CommonServiceAutoConfiguration {
-
 	@Bean
 	@ConditionalOnMissingBean(ObjectMapper.class)
 	ObjectMapper objectMapper() {
-		return new ObjectMapper().findAndRegisterModules()
-		                         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+		return new ObjectMapper().findAndRegisterModules().disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 	}
 }

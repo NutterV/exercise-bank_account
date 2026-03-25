@@ -3,7 +3,8 @@ package com.exercise.bankaccount.tracker.application;
 import com.exercise.bankaccount.common.model.Transaction;
 import com.exercise.bankaccount.tracker.api.BankAccountService;
 import com.exercise.bankaccount.tracker.application.submission.SubmissionBufferCoordinator;
-import java.util.concurrent.atomic.DoubleAdder;
+import java.math.BigDecimal;
+import java.util.concurrent.atomic.AtomicReference;
 import org.springframework.stereotype.Service;
 
 /**
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class InMemoryBankAccountService implements BankAccountService {
-	private final DoubleAdder balance = new DoubleAdder();
+	private final AtomicReference<BigDecimal> balance = new AtomicReference<>(BigDecimal.ZERO);
 	private final SubmissionBufferCoordinator submissionBufferCoordinator;
 
 	/**
@@ -35,7 +36,7 @@ public class InMemoryBankAccountService implements BankAccountService {
 	 */
 	@Override
 	public void processTransaction(Transaction transaction) {
-		balance.add(transaction.amount().doubleValue());
+		balance.updateAndGet(currentBalance -> currentBalance.add(transaction.amount()));
 		submissionBufferCoordinator.record(transaction);
 	}
 
@@ -46,6 +47,6 @@ public class InMemoryBankAccountService implements BankAccountService {
 	 */
 	@Override
 	public double retrieveBalance() {
-		return balance.sum();
+		return balance.get().doubleValue();
 	}
 }

@@ -1,10 +1,11 @@
 package com.exercise.bankaccount.tracker.application.submission;
 
 import com.exercise.bankaccount.common.model.Transaction;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /**
  * Fixed-size transaction window that becomes sealed once it reaches its
@@ -12,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public final class SubmissionBuffer {
 	private final int id;
-	private final Transaction[] transactions;
+	private final AtomicReferenceArray<Transaction> transactions;
 	private final AtomicInteger size = new AtomicInteger();
 	private final AtomicBoolean dispatched = new AtomicBoolean();
 
@@ -24,7 +25,7 @@ public final class SubmissionBuffer {
 	 */
 	public SubmissionBuffer(int id, int capacity) {
 		this.id = id;
-		this.transactions = new Transaction[capacity];
+		this.transactions = new AtomicReferenceArray<>(capacity);
 	}
 
 	/**
@@ -44,13 +45,13 @@ public final class SubmissionBuffer {
 	 */
 	public AppendResult tryAppend(Transaction transaction) {
 		int slot = size.getAndIncrement();
-		if (slot >= transactions.length) {
+		if (slot >= transactions.length()) {
 			size.decrementAndGet();
 			return AppendResult.FULL;
 		}
 
-		transactions[slot] = transaction;
-		return slot + 1 == transactions.length ? AppendResult.SEALED : AppendResult.APPENDED;
+		transactions.set(slot, transaction);
+		return slot + 1 == transactions.length() ? AppendResult.SEALED : AppendResult.APPENDED;
 	}
 
 	/**
@@ -70,14 +71,26 @@ public final class SubmissionBuffer {
 	 * @return immutable list of the buffered transactions
 	 */
 	public List<Transaction> toList() {
-		return List.copyOf(Arrays.asList(Arrays.copyOf(transactions, size.get())));
+		int transactionCount = Math.min(size.get(), transactions.length());
+		List<Transaction> snapshot = new ArrayList<>(transactionCount);
+		for (int index = 0; index < transactionCount; index++) {
+			Transaction transaction = transactions.get(index);
+			if (transaction == null) {
+				throw new IllegalStateException("Submission buffer snapshot contains an unpublished transaction at slot "
+						+ index + " for buffer " + id);
+			}
+			snapshot.add(transaction);
+		}
+		return List.copyOf(snapshot);
 	}
 
 	/**
 	 * Clears buffer state so the instance can be returned to the pool.
 	 */
 	public void reset() {
-		Arrays.fill(transactions, null);
+		for (int index = 0; index < transactions.length(); index++) {
+			transactions.set(index, null);
+		}
 		size.set(0);
 		dispatched.set(false);
 	}

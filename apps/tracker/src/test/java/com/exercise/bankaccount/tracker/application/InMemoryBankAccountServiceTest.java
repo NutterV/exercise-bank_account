@@ -27,6 +27,19 @@ class InMemoryBankAccountServiceTest {
 		assertEquals(debit, coordinator.recordedTransactions().get(1));
 	}
 
+	@Test
+	void shouldAccumulateDecimalAmountsWithoutFloatingPointDrift() {
+		RecordingSubmissionBufferCoordinator coordinator = new RecordingSubmissionBufferCoordinator();
+		InMemoryBankAccountService service = new InMemoryBankAccountService(coordinator);
+
+		for (int index = 0; index < 10_000; index++) {
+			service.processTransaction(transaction(new BigDecimal("0.01")));
+		}
+
+		assertEquals(100.0d, service.retrieveBalance());
+		assertEquals(10_000, coordinator.recordedTransactions().size());
+	}
+
 	private static Transaction transaction(BigDecimal amount) {
 		return new Transaction(UUID.randomUUID(), amount);
 	}

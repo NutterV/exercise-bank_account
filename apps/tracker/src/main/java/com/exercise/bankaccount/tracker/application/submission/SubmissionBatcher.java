@@ -7,8 +7,6 @@ import com.exercise.bankaccount.tracker.application.config.TrackerSubmissionProp
 import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ExecutorService;
@@ -31,6 +29,7 @@ public class SubmissionBatcher implements SubmissionProcessor {
 	private final Consumer<AuditSubmission> auditSubmissionConsumer;
 	private final ExecutorService workerExecutor;
 	private final BigDecimal maxBatchTotal;
+	private final SubmissionBatchPlanner submissionBatchPlanner;
 
 	/**
 	 * Creates the production batcher with one background batching worker.
@@ -44,6 +43,7 @@ public class SubmissionBatcher implements SubmissionProcessor {
 	public SubmissionBatcher(TrackerSubmissionProperties trackerSubmissionProperties,
 			BatchedSubmissionPublisher batchedSubmissionPublisher) {
 		this(trackerSubmissionProperties.maxBatchTotal(),
+				new FirstFitDecreasingSubmissionBatchPlanner(),
 				auditSubmission -> publishSubmission(batchedSubmissionPublisher, auditSubmission),
 				Executors.newSingleThreadExecutor());
 	}
@@ -61,7 +61,13 @@ public class SubmissionBatcher implements SubmissionProcessor {
 	 */
 	SubmissionBatcher(BigDecimal maxBatchTotal, Consumer<AuditSubmission> auditSubmissionConsumer,
 			ExecutorService workerExecutor) {
+		this(maxBatchTotal, new FirstFitDecreasingSubmissionBatchPlanner(), auditSubmissionConsumer, workerExecutor);
+	}
+
+	SubmissionBatcher(BigDecimal maxBatchTotal, SubmissionBatchPlanner submissionBatchPlanner,
+			Consumer<AuditSubmission> auditSubmissionConsumer, ExecutorService workerExecutor) {
 		this.maxBatchTotal = maxBatchTotal;
+		this.submissionBatchPlanner = submissionBatchPlanner;
 		this.auditSubmissionConsumer = auditSubmissionConsumer;
 		this.workerExecutor = workerExecutor;
 		this.workerExecutor.execute(this::runBatchingLoop);
@@ -91,21 +97,7 @@ public class SubmissionBatcher implements SubmissionProcessor {
 	}
 
 	AuditSubmission buildSubmission(List<Transaction> transactions) {
-		List<MutableBatch> batches = new ArrayList<>();
-		List<Transaction> sortedTransactions = transactions.stream()
-				.sorted(Comparator.comparing(Transaction::absoluteAmount).reversed()).toList();
-
-		for (Transaction transaction : sortedTransactions) {
-			BigDecimal absoluteAmount = transaction.absoluteAmount();
-			if (absoluteAmount.compareTo(maxBatchTotal) > 0) {
-				throw new IllegalArgumentException("Transaction exceeds batch value limit: " + transaction.id());
-			}
-
-			placeIntoBatch(batches, absoluteAmount);
-		}
-
-		return new AuditSubmission(
-				batches.stream().map(batch -> new AuditBatch(batch.totalValue(), batch.transactionCount())).toList());
+		return new AuditSubmission(submissionBatchPlanner.plan(transactions, maxBatchTotal));
 	}
 
 	private void runBatchingLoop() {
@@ -130,41 +122,6 @@ public class SubmissionBatcher implements SubmissionProcessor {
 			LOGGER.info("Processed queued submission into {} audit batches", auditSubmission.batches().size());
 		} catch (Exception exception) {
 			throw new IllegalStateException("Failed to publish batched audit submission", exception);
-		}
-	}
-
-	private void placeIntoBatch(List<MutableBatch> batches, BigDecimal absoluteAmount) {
-		for (MutableBatch batch : batches) {
-			if (batch.canAccept(absoluteAmount)) {
-				batch.add(absoluteAmount);
-				return;
-			}
-		}
-
-		MutableBatch batch = new MutableBatch();
-		batch.add(absoluteAmount);
-		batches.add(batch);
-	}
-
-	private final class MutableBatch {
-		private BigDecimal totalValue = BigDecimal.ZERO;
-		private int transactionCount;
-
-		private boolean canAccept(BigDecimal absoluteAmount) {
-			return totalValue.add(absoluteAmount).compareTo(maxBatchTotal) <= 0;
-		}
-
-		private void add(BigDecimal absoluteAmount) {
-			totalValue = totalValue.add(absoluteAmount);
-			transactionCount++;
-		}
-
-		private BigDecimal totalValue() {
-			return totalValue;
-		}
-
-		private int transactionCount() {
-			return transactionCount;
 		}
 	}
 }

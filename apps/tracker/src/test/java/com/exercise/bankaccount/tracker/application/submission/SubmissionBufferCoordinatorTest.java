@@ -6,11 +6,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.exercise.bankaccount.common.model.Transaction;
 import java.math.BigDecimal;
 import java.lang.reflect.Field;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
@@ -57,8 +60,9 @@ class SubmissionBufferCoordinatorTest {
 				10);
 		CountDownLatch start = new CountDownLatch(1);
 		try (ExecutorService executorService = Executors.newFixedThreadPool(threadCount)) {
+			List<Future<?>> futures = new java.util.ArrayList<>();
 			for (int index = 0; index < threadCount; index++) {
-				executorService.submit(() -> {
+				futures.add(executorService.submit(() -> {
 					try {
 						start.await();
 						for (int count = 0; count < transactionsPerThread; count++) {
@@ -68,10 +72,13 @@ class SubmissionBufferCoordinatorTest {
 						Thread.currentThread().interrupt();
 						throw new IllegalStateException(exception);
 					}
-				});
+				}));
 			}
 
 			start.countDown();
+			for (Future<?> future : futures) {
+				future.get(15, TimeUnit.SECONDS);
+			}
 			executorService.shutdown();
 			assertTrue(executorService.awaitTermination(15, TimeUnit.SECONDS));
 		}
@@ -79,6 +86,13 @@ class SubmissionBufferCoordinatorTest {
 		assertTrue(processor.awaitSubmission());
 		assertEquals(2, processor.submissions().size());
 		assertEquals(2_000, processor.submissions().stream().mapToInt(List::size).sum());
+		Set<UUID> transactionIds = new HashSet<>();
+		for (List<Transaction> submission : processor.submissions()) {
+			for (Transaction transaction : submission) {
+				assertTrue(transactionIds.add(transaction.id()));
+			}
+		}
+		assertEquals(2_000, transactionIds.size());
 	}
 
 	@Test

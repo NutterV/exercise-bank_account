@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 
 class SubmissionBatcherTest {
 	private static final BigDecimal TEST_MAX_BATCH_TOTAL = BigDecimal.valueOf(1_000_000);
+	private static final SubmissionBatchPlanner FFD_PLANNER = new FirstFitDecreasingSubmissionBatchPlanner();
 
 	@Test
 	void shouldKeepTransactionsInOneBatchWhenAbsoluteTotalFitsTheLimit() {
@@ -64,6 +65,23 @@ class SubmissionBatcherTest {
 			assertEquals(2, submission.batches().get(0).countOfTransactions());
 			assertEquals(new BigDecimal("1000000"), submission.batches().get(1).totalValueOfAllTransactions());
 			assertEquals(2, submission.batches().get(1).countOfTransactions());
+		} finally {
+			submissionBatcher.shutdown();
+		}
+	}
+
+	@Test
+	void shouldUseFirstFitDecreasingOrderingBeforePacking() {
+		SubmissionBatcher submissionBatcher = new SubmissionBatcher(TEST_MAX_BATCH_TOTAL, FFD_PLANNER,
+				auditSubmission -> {
+				}, Executors.newSingleThreadExecutor());
+		try {
+			AuditSubmission submission = submissionBatcher.buildSubmission(List.of(transaction("400000"),
+					transaction("400000"), transaction("600000"), transaction("600000")));
+
+			assertEquals(2, submission.batches().size());
+			assertEquals(new BigDecimal("1000000"), submission.batches().get(0).totalValueOfAllTransactions());
+			assertEquals(new BigDecimal("1000000"), submission.batches().get(1).totalValueOfAllTransactions());
 		} finally {
 			submissionBatcher.shutdown();
 		}

@@ -202,17 +202,24 @@ class TrackerEndToEndPerformanceTest {
 	}
 
 	private static Stream<Arguments> payloadSizes() {
-		return Stream.of(Arguments.of(1_000), Arguments.of(1_500), Arguments.of(2_000), Arguments.of(5_000));
+		return Stream.of(Arguments.of(10_000), Arguments.of(25_000), Arguments.of(50_000), Arguments.of(75_000),
+				Arguments.of(100_000));
 	}
 
 	private static Duration timeoutFor(int transactionCount) {
-		if (transactionCount <= 1_000) {
-			return Duration.ofSeconds(10);
+		if (transactionCount <= 10_000) {
+			return Duration.ofSeconds(30);
 		}
-		if (transactionCount <= 2_000) {
-			return Duration.ofSeconds(15);
+		if (transactionCount <= 25_000) {
+			return Duration.ofSeconds(60);
 		}
-		return Duration.ofSeconds(30);
+		if (transactionCount <= 50_000) {
+			return Duration.ofSeconds(90);
+		}
+		if (transactionCount <= 75_000) {
+			return Duration.ofSeconds(120);
+		}
+		return Duration.ofSeconds(180);
 	}
 
 	private static EmbeddedActiveMQ startBroker() {

@@ -1,11 +1,13 @@
 package com.exercise.bankaccount.tracker.infrastructure;
 
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.exercise.bankaccount.common.model.Transaction;
 import com.exercise.bankaccount.tracker.api.BankAccountService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.jms.Message;
 import jakarta.jms.TextMessage;
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -26,5 +28,16 @@ class TransactionMessageListenerTest {
 		listener.onMessage(message);
 
 		verify(bankAccountService).processTransaction(transaction);
+	}
+
+	@Test
+	void shouldRejectUnsupportedMessageTypesWithoutCallingService() {
+		BankAccountService bankAccountService = Mockito.mock(BankAccountService.class);
+		ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+		TransactionMessageListener listener = new TransactionMessageListener(bankAccountService, objectMapper);
+		Message message = Mockito.mock(Message.class);
+
+		org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> listener.onMessage(message));
+		verifyNoInteractions(bankAccountService);
 	}
 }

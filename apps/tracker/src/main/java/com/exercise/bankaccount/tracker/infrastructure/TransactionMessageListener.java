@@ -1,7 +1,7 @@
 package com.exercise.bankaccount.tracker.infrastructure;
 
 import com.exercise.bankaccount.common.model.Transaction;
-import com.exercise.bankaccount.commonservice.config.MessagingProperties;
+import com.exercise.bankaccount.commonservice.config.QueueType;
 import com.exercise.bankaccount.tracker.api.BankAccountService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.jms.JMSException;
@@ -17,22 +17,38 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class TransactionMessageListener {
-
 	private static final Logger LOGGER = LoggerFactory.getLogger(TransactionMessageListener.class);
 
 	private final BankAccountService bankAccountService;
 	private final ObjectMapper objectMapper;
 
+	/**
+	 * @param bankAccountService tracker service that owns balance and submission-window processing
+	 * @param objectMapper       JSON mapper used to deserialize transaction messages
+	 */
 	public TransactionMessageListener(BankAccountService bankAccountService, ObjectMapper objectMapper) {
 		this.bankAccountService = bankAccountService;
 		this.objectMapper = objectMapper;
 	}
 
-	@JmsListener(destination = "#{@messagingProperties.transactionQueue()}")
+	/**
+	 * Consumes one broker message and forwards the decoded transaction into the tracker service.
+	 *
+	 * @param message JMS message expected to contain a serialized {@link Transaction}
+	 * @throws Exception when the payload cannot be decoded or is not a supported message type
+	 */
+	@JmsListener(destination = "#{@messagingProperties.queueName(T(com.exercise.bankaccount.commonservice.config.QueueType).TRANSACTION)}")
 	public void onMessage(Message message) throws Exception {
 		bankAccountService.processTransaction(readTransaction(message));
 	}
 
+	/**
+	 * Deserializes a supported JMS message into a transaction payload.
+	 *
+	 * @param message raw JMS message from the transaction queue
+	 * @return decoded transaction
+	 * @throws Exception when the payload cannot be parsed or the message type is unsupported
+	 */
 	private Transaction readTransaction(Message message) throws Exception {
 		if (message instanceof TextMessage textMessage) {
 			return objectMapper.readValue(textMessage.getText(), Transaction.class);

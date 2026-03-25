@@ -10,7 +10,7 @@ public interface BankAccountService {
 	/**
 	 * Process a given transaction.
 	 *
-	 * @param transaction transaction to process
+	 * @param transaction transaction to process and fold into the current balance and audit window
 	 */
 	void processTransaction(Transaction transaction);
 

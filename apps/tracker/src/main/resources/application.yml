@@ -4,5 +4,12 @@ spring:
 
 bank-account:
   messaging:
-    transaction-queue: bank-account.transactions
-    audit-queue: bank-account.audit
+    queues:
+      transaction: bank-account.transactions
+      audit: bank-account.audit
+  tracker:
+    submission:
+      submission-size: 1000
+      initial-buffer-count: 2
+      max-buffer-count: 10
+      max-batch-total: 1000000

@@ -18,10 +18,8 @@
     <name>bank-account-parent</name>
 
     <modules>
-        <module>common</module>
-        <module>common-service</module>
-        <module>services</module>
-        <module>mocked</module>
+        <module>libs</module>
+        <module>apps</module>
     </modules>
 
     <properties>

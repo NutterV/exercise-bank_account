@@ -6,8 +6,9 @@
 
     <parent>
         <groupId>com.exercise</groupId>
-        <artifactId>bank-account-parent</artifactId>
+        <artifactId>libs</artifactId>
         <version>1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>common</artifactId>

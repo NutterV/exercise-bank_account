@@ -10,7 +10,7 @@ import java.util.Objects;
  */
 public record AuditSubmission(List<AuditBatch> batches) {
 
-    public AuditSubmission {
-        batches = List.copyOf(Objects.requireNonNull(batches, "batches must not be null"));
-    }
+	public AuditSubmission {
+		batches = List.copyOf(Objects.requireNonNull(batches, "batches must not be null"));
+	}
 }

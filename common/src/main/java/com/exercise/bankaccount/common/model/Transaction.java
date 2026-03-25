@@ -6,12 +6,12 @@ import java.util.UUID;
 
 public record Transaction(UUID id, BigDecimal amount) {
 
-    public Transaction {
-        Objects.requireNonNull(id, "id must not be null");
-        Objects.requireNonNull(amount, "amount must not be null");
-    }
+	public Transaction {
+		Objects.requireNonNull(id, "id must not be null");
+		Objects.requireNonNull(amount, "amount must not be null");
+	}
 
-    public BigDecimal absoluteAmount() {
-        return amount.abs();
-    }
+	public BigDecimal absoluteAmount() {
+		return amount.abs();
+	}
 }

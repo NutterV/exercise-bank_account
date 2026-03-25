@@ -7,17 +7,17 @@ import com.exercise.bankaccount.common.model.Transaction;
  */
 public interface BankAccountService {
 
-    /**
-     * Process a given transaction.
-     *
-     * @param transaction transaction to process
-     */
-    void processTransaction(Transaction transaction);
+	/**
+	 * Process a given transaction.
+	 *
+	 * @param transaction transaction to process
+	 */
+	void processTransaction(Transaction transaction);
 
-    /**
-     * Retrieve the balance in the account.
-     *
-     * @return current account balance
-     */
-    double retrieveBalance();
+	/**
+	 * Retrieve the balance in the account.
+	 *
+	 * @return current account balance
+	 */
+	double retrieveBalance();
 }

@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 @ConfigurationPropertiesScan(basePackages = "com.exercise.bankaccount")
 public class ProducerApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(ProducerApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(ProducerApplication.class, args);
+	}
 }

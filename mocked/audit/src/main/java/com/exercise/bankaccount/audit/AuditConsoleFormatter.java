@@ -9,11 +9,11 @@ import com.fasterxml.jackson.databind.SerializationFeature;
  */
 final class AuditConsoleFormatter {
 
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .findAndRegisterModules()
-            .enable(SerializationFeature.INDENT_OUTPUT);
+	private final ObjectMapper objectMapper = new ObjectMapper()
+		                                          .findAndRegisterModules()
+		                                          .enable(SerializationFeature.INDENT_OUTPUT);
 
-    String format(AuditSubmissionEnvelope envelope) throws Exception {
-        return objectMapper.writeValueAsString(envelope);
-    }
+	String format(AuditSubmissionEnvelope envelope) throws Exception {
+		return objectMapper.writeValueAsString(envelope);
+	}
 }

@@ -5,7 +5,13 @@
     <file url="file://$PROJECT_DIR$/common/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mocked/audit/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mocked/broker/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mocked/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mocked/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/services/producer/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/services/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/services/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/services/tracker/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
   </component>
 </project>

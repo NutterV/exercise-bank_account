@@ -10,14 +10,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/balances")
 public class BalanceController {
 
-    private final BankAccountService bankAccountService;
+	private final BankAccountService bankAccountService;
 
-    public BalanceController(BankAccountService bankAccountService) {
-        this.bankAccountService = bankAccountService;
-    }
+	public BalanceController(BankAccountService bankAccountService) {
+		this.bankAccountService = bankAccountService;
+	}
 
-    @GetMapping("/current")
-    public BalanceResponse currentBalance() {
-        return new BalanceResponse(bankAccountService.retrieveBalance());
-    }
+	@GetMapping("/current")
+	public BalanceResponse currentBalance() {
+		return new BalanceResponse(bankAccountService.retrieveBalance());
+	}
 }

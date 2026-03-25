@@ -9,7 +9,7 @@ import java.util.Objects;
  */
 public record AuditSubmissionEnvelope(AuditSubmission submission) {
 
-    public AuditSubmissionEnvelope {
-        Objects.requireNonNull(submission, "submission must not be null");
-    }
+	public AuditSubmissionEnvelope {
+		Objects.requireNonNull(submission, "submission must not be null");
+	}
 }

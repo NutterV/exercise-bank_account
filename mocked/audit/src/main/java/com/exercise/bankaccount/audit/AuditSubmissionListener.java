@@ -1,6 +1,6 @@
 package com.exercise.bankaccount.audit;
 
-import com.exercise.bankaccount.common.model.AuditSubmissionEnvelope;
+import com.exercise.bankaccount.common.model.AuditSubmission;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.jms.*;
 import org.apache.activemq.artemis.api.jms.ActiveMQJMSClient;
@@ -17,7 +17,6 @@ final class AuditSubmissionListener implements AutoCloseable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AuditSubmissionListener.class);
 
-	private final AuditConsoleFormatter formatter;
 	private final ObjectMapper objectMapper;
 	private final CountDownLatch shutdownLatch = new CountDownLatch(1);
 
@@ -26,8 +25,7 @@ final class AuditSubmissionListener implements AutoCloseable {
 	private Session session;
 	private MessageConsumer consumer;
 
-	AuditSubmissionListener(AuditConsoleFormatter formatter) {
-		this.formatter = formatter;
+	AuditSubmissionListener() {
 		this.objectMapper = new ObjectMapper().findAndRegisterModules();
 	}
 
@@ -60,16 +58,16 @@ final class AuditSubmissionListener implements AutoCloseable {
 	private MessageListener onMessage() {
 		return message -> {
 			try {
-				System.out.println(formatter.format(readEnvelope(message)));
+				System.out.println(AuditConsoleFormatter.format(readSubmission(message)));
 			} catch (Exception exception) {
 				LOGGER.error("Failed to process audit submission message", exception);
 			}
 		};
 	}
 
-	private AuditSubmissionEnvelope readEnvelope(Message message) throws Exception {
+	private AuditSubmission readSubmission(Message message) throws Exception {
 		if (message instanceof TextMessage textMessage) {
-			return objectMapper.readValue(textMessage.getText(), AuditSubmissionEnvelope.class);
+			return objectMapper.readValue(textMessage.getText(), AuditSubmission.class);
 		}
 
 		throw new JMSException("Unsupported message type: " + message.getClass().getName());

@@ -1,19 +1,20 @@
 package com.exercise.bankaccount.audit;
 
-import com.exercise.bankaccount.common.model.AuditSubmissionEnvelope;
+import com.exercise.bankaccount.common.model.AuditSubmission;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import java.util.Map;
 
 /**
  * Formats audit submissions as pretty-printed JSON matching the exercise's mocked audit output.
  */
 final class AuditConsoleFormatter {
 
-	private final ObjectMapper objectMapper = new ObjectMapper()
+	private static final ObjectMapper objectMapper = new ObjectMapper()
 		                                          .findAndRegisterModules()
 		                                          .enable(SerializationFeature.INDENT_OUTPUT);
 
-	String format(AuditSubmissionEnvelope envelope) throws Exception {
-		return objectMapper.writeValueAsString(envelope);
+	static String format(AuditSubmission submission) throws Exception {
+		return objectMapper.writeValueAsString(Map.of("submission", submission));
 	}
 }

@@ -16,7 +16,7 @@ public final class AuditMain {
 	 */
 	public static void main(String[] args) throws Exception {
 		AuditRuntimeProperties properties = AuditRuntimeProperties.fromSystem();
-		AuditSubmissionListener listener = new AuditSubmissionListener(new AuditConsoleFormatter());
+		AuditSubmissionListener listener = new AuditSubmissionListener();
 		Runtime.getRuntime().addShutdownHook(new Thread(listener::close, "audit-shutdown"));
 		listener.start(properties);
 		listener.awaitShutdown();

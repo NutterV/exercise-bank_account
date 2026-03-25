@@ -5,6 +5,7 @@ import com.exercise.bankaccount.tracker.application.config.TrackerSubmissionProp
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -29,6 +30,7 @@ public class SubmissionBufferCoordinator {
 	 * @param trackerSubmissionProperties
 	 *            configured submission-window and buffer-pool sizing
 	 */
+	@Autowired
 	public SubmissionBufferCoordinator(SubmissionProcessor submissionProcessor,
 			TrackerSubmissionProperties trackerSubmissionProperties) {
 		this(submissionProcessor, trackerSubmissionProperties.submissionSize(),

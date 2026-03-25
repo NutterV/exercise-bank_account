@@ -5,6 +5,7 @@ import com.exercise.bankaccount.common.model.AuditSubmission;
 import com.exercise.bankaccount.common.model.Transaction;
 import com.exercise.bankaccount.tracker.application.config.TrackerSubmissionProperties;
 import jakarta.annotation.PreDestroy;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -39,6 +40,7 @@ public class SubmissionBatcher implements SubmissionProcessor {
 	 * @param batchedSubmissionPublisher
 	 *            publisher for completed audit submissions
 	 */
+	@Autowired
 	public SubmissionBatcher(TrackerSubmissionProperties trackerSubmissionProperties,
 			BatchedSubmissionPublisher batchedSubmissionPublisher) {
 		this(trackerSubmissionProperties.maxBatchTotal(),

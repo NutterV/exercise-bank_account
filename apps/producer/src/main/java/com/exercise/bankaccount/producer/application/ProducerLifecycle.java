@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Service;
  * down with the application.
  */
 @Service
+@ConditionalOnProperty(name = "bank-account.producer.lifecycle.enabled", havingValue = "true",
+		matchIfMissing = true)
 public class ProducerLifecycle implements ApplicationRunner {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProducerLifecycle.class);
 

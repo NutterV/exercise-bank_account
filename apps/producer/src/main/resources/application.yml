@@ -11,5 +11,6 @@ bank-account:
     minimum-amount: 200
     maximum-amount: 500000
   messaging:
-    transaction-queue: bank-account.transactions
-    audit-queue: bank-account.audit
+    queues:
+      transaction: bank-account.transactions
+      audit: bank-account.audit

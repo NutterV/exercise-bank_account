@@ -43,7 +43,7 @@ public class TransactionMessageListener {
 	 *             when the payload cannot be decoded or is not a supported message
 	 *             type
 	 */
-	@JmsListener(destination = "#{@messagingProperties.queueName(T(com.exercise.bankaccount.commonservice.config.QueueType).TRANSACTION)}")
+	@JmsListener(destination = "${bank-account.messaging.queues.transaction}")
 	public void onMessage(Message message) throws Exception {
 		bankAccountService.processTransaction(readTransaction(message));
 	}

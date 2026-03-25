@@ -1,4 +1,4 @@
-package com.exercise.bankaccount.common.api;
+package com.exercise.bankaccount.tracker.api;
 
 import com.exercise.bankaccount.common.model.Transaction;
 

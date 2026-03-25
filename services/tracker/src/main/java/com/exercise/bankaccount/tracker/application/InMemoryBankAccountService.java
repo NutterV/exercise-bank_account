@@ -1,7 +1,7 @@
 package com.exercise.bankaccount.tracker.application;
 
-import com.exercise.bankaccount.common.api.BankAccountService;
 import com.exercise.bankaccount.common.model.Transaction;
+import com.exercise.bankaccount.tracker.api.BankAccountService;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.atomic.DoubleAdder;

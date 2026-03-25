@@ -1,6 +1,5 @@
 package com.exercise.bankaccount.tracker.api;
 
-import com.exercise.bankaccount.common.api.BankAccountService;
 import com.exercise.bankaccount.common.model.BalanceResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

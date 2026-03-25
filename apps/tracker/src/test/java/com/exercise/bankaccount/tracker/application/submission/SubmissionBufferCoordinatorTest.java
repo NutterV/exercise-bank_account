@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.exercise.bankaccount.common.model.Transaction;
 import java.math.BigDecimal;
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -72,7 +73,7 @@ class SubmissionBufferCoordinatorTest {
 
 			start.countDown();
 			executorService.shutdown();
-			assertTrue(executorService.awaitTermination(2, TimeUnit.SECONDS));
+			assertTrue(executorService.awaitTermination(15, TimeUnit.SECONDS));
 		}
 
 		assertTrue(processor.awaitSubmission());
@@ -80,8 +81,37 @@ class SubmissionBufferCoordinatorTest {
 		assertEquals(2_000, processor.submissions().stream().mapToInt(List::size).sum());
 	}
 
+	@Test
+	void shouldCreateThirdBufferWhenBothInitialBuffersAreUnavailable() throws Exception {
+		BlockingFirstSubmissionProcessor processor = new BlockingFirstSubmissionProcessor();
+		SubmissionBufferCoordinator coordinator = new SubmissionBufferCoordinator(processor, 2, 2, 10);
+		Thread firstWindowThread = new Thread(() -> {
+			coordinator.record(transaction(BigDecimal.ONE));
+			coordinator.record(transaction(BigDecimal.ONE));
+		});
+
+		firstWindowThread.start();
+		assertTrue(processor.awaitFirstSubmissionStarted());
+
+		coordinator.record(transaction(BigDecimal.ONE));
+		coordinator.record(transaction(BigDecimal.ONE));
+
+		assertEquals(3, bufferCount(coordinator));
+
+		processor.releaseFirstSubmission();
+		firstWindowThread.join(TimeUnit.SECONDS.toMillis(5));
+		assertTrue(processor.awaitSecondSubmission());
+		assertEquals(2, processor.submissions().size());
+	}
+
 	private static Transaction transaction(BigDecimal amount) {
 		return new Transaction(UUID.randomUUID(), amount);
+	}
+
+	private static int bufferCount(SubmissionBufferCoordinator coordinator) throws ReflectiveOperationException {
+		Field bufferCountField = SubmissionBufferCoordinator.class.getDeclaredField("bufferCount");
+		bufferCountField.setAccessible(true);
+		return ((java.util.concurrent.atomic.AtomicInteger) bufferCountField.get(coordinator)).get();
 	}
 
 	private static final class RecordingSubmissionProcessor implements SubmissionProcessor {
@@ -103,7 +133,46 @@ class SubmissionBufferCoordinatorTest {
 		}
 
 		private boolean awaitSubmission() throws InterruptedException {
-			return latch.await(2, TimeUnit.SECONDS);
+			return latch.await(15, TimeUnit.SECONDS);
+		}
+
+		private List<List<Transaction>> submissions() {
+			return submissions;
+		}
+	}
+
+	private static final class BlockingFirstSubmissionProcessor implements SubmissionProcessor {
+		private final CountDownLatch firstSubmissionStarted = new CountDownLatch(1);
+		private final CountDownLatch firstSubmissionRelease = new CountDownLatch(1);
+		private final CountDownLatch secondSubmission = new CountDownLatch(1);
+		private final List<List<Transaction>> submissions = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+		@Override
+		public void processSubmission(List<Transaction> transactions) {
+			submissions.add(transactions);
+			if (submissions.size() == 1) {
+				firstSubmissionStarted.countDown();
+				try {
+					firstSubmissionRelease.await(15, TimeUnit.SECONDS);
+				} catch (InterruptedException exception) {
+					Thread.currentThread().interrupt();
+					throw new IllegalStateException(exception);
+				}
+				return;
+			}
+			secondSubmission.countDown();
+		}
+
+		private boolean awaitFirstSubmissionStarted() throws InterruptedException {
+			return firstSubmissionStarted.await(15, TimeUnit.SECONDS);
+		}
+
+		private void releaseFirstSubmission() {
+			firstSubmissionRelease.countDown();
+		}
+
+		private boolean awaitSecondSubmission() throws InterruptedException {
+			return secondSubmission.await(15, TimeUnit.SECONDS);
 		}
 
 		private List<List<Transaction>> submissions() {

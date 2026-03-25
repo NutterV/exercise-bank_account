@@ -18,6 +18,7 @@
   <modules>
     <module>libs</module>
     <module>apps</module>
+    <module>coverage</module>
   </modules>
 
   <properties>
@@ -25,6 +26,7 @@
     <maven.compiler.release>${java.version}</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <artemis.version>2.37.0</artemis.version>
+    <jacoco.version>0.8.12</jacoco.version>
     <spotless.version>2.43.0</spotless.version>
   </properties>
 
@@ -50,6 +52,43 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco.version}</version>
+        <configuration>
+          <excludes>
+            <exclude>java.*</exclude>
+            <exclude>javax.*</exclude>
+            <exclude>jakarta.*</exclude>
+            <exclude>jdk.*</exclude>
+            <exclude>sun.*</exclude>
+            <exclude>com.sun.*</exclude>
+            <exclude>org.*</exclude>
+            <exclude>net.*</exclude>
+            <exclude>io.*</exclude>
+            <exclude>ch.*</exclude>
+            <exclude>kotlin.*</exclude>
+            <exclude>com.fasterxml.*</exclude>
+            <exclude>com.google.*</exclude>
+            <exclude>com.ctc.*</exclude>
+            <exclude>*MockitoMock*</exclude>
+            <exclude>*$auxiliary$*</exclude>
+            <exclude>**/*Application.class</exclude>
+            <exclude>**/*AutoConfiguration.class</exclude>
+            <exclude>**/*Configuration.class</exclude>
+            <exclude>**/*Properties.class</exclude>
+          </excludes>
+        </configuration>
+        <executions>
+          <execution>
+            <id>prepare-jacoco-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>com.diffplug.spotless</groupId>
         <artifactId>spotless-maven-plugin</artifactId>

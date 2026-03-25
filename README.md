@@ -230,6 +230,8 @@ mvn verify -DskipTests
 
 ## Notes
 
-- The tracker batching logic currently uses a greedy packing strategy. It respects the per-batch limit, but it is not guaranteed to produce the mathematically minimum number of batches in every possible case.
+- The tracker hot path currently routes audit batching through the greedy first-fit-decreasing planner in [`FirstFitDecreasingSubmissionBatchPlanner.java`](C:/git/exercise-bank_account/apps/tracker/src/main/java/com/exercise/bankaccount/tracker/application/submission/FirstFitDecreasingSubmissionBatchPlanner.java). This is the production algorithm because it has predictable performance.
+- An exact branch-and-bound alternative is also kept in the codebase at [`ExactSubmissionBatchPlanner.java`](C:/git/exercise-bank_account/apps/tracker/src/main/java/com/exercise/bankaccount/tracker/application/submission/ExactSubmissionBatchPlanner.java). It is not used in production; it exists as a correctness reference, for comparative tests, and to support future bounded-optimal work.
+- The tradeoff between the two planners is documented by [`SubmissionBatchPlannerPerformanceTest.java`](C:/git/exercise-bank_account/apps/tracker/src/test/java/com/exercise/bankaccount/tracker/application/submission/SubmissionBatchPlannerPerformanceTest.java), which shows where exact packing benefits disappear relative to runtime cost.
 - Coverage is aggregated at repo level through the [`coverage`](C:/git/exercise-bank_account/coverage) module.
 - Coverage excludes application/bootstrap/config/property wiring classes so the report focuses on executable logic.

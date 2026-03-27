@@ -145,56 +145,42 @@ Tracker config file:
 
 Producer keys:
 
-- `spring.artemis.broker-url`
-  - Points the producer at the broker instance it should publish to.
+- `spring.artemis.broker-url` - Points the producer at the broker instance it should publish to.
   - In normal local runtime this stays at `tcp://127.0.0.1:61616`.
   - Tests often override this to point at an embedded broker started on a random port.
-- `bank-account.messaging.queues.transaction`
-  - The queue name used by the producer for outgoing transactions.
+- `bank-account.messaging.queues.transaction` - The queue name used by the producer for outgoing transactions.
   - In normal runtime this should match the tracker's transaction queue.
   - Tests override this so each test run can use isolated queue names.
-- `bank-account.messaging.queues.audit`
-  - Present because queue configuration is shared, but the producer does not actively publish audit messages.
+- `bank-account.messaging.queues.audit` - Present because queue configuration is shared, but the producer does not actively publish audit messages.
   - It usually stays at the default unless a test or environment wants all queue names isolated.
-- `bank-account.producer.credits-per-second`
-  - Controls the target rate for the credit-producing worker.
+- `bank-account.producer.credits-per-second` - Controls the target rate for the credit-producing worker.
   - This is a runtime tuning value.
   - It is useful in local runs when you want to turn throughput up or down without code changes.
-- `bank-account.producer.debits-per-second`
-  - Controls the target rate for the debit-producing worker.
+- `bank-account.producer.debits-per-second` - Controls the target rate for the debit-producing worker.
   - Like the credit rate, this is a runtime tuning value rather than a test-only setting.
-- `bank-account.producer.minimum-amount`
-  - The minimum amount of money that can be credited or debited by the producer.
+- `bank-account.producer.minimum-amount` - The minimum amount of money that can be credited or debited by the producer.
   - This is a runtime tuning value that can be adjusted to simulate different transaction sizes.
-- `bank-account.producer.maximum-amount`
-  - The maximum amount of money that can be credited or debited by the producer.
+- `bank-account.producer.maximum-amount` - The maximum amount of money that can be credited or debited by the producer.
   - This is a runtime tuning value that can be adjusted to simulate different transaction sizes.
 
 Tracker keys:
 
-- `bank-account.messaging.queues.transaction`
-  - The queue name the tracker listens to for incoming transactions.
+- `bank-account.messaging.queues.transaction` - The queue name the tracker listens to for incoming transactions.
   - In normal runtime it should match the producer's transaction queue.
   - In tests it is commonly overridden so the embedded broker and the test case use isolated destinations.
-- `bank-account.messaging.queues.audit`
-  - The queue name the tracker publishes `AuditSubmission` messages to.
+- `bank-account.messaging.queues.audit` - The queue name the tracker publishes `AuditSubmission` messages to.
   - In normal runtime it should match the audit consumer.
   - In tests it is commonly overridden so the test can drain and assert against its own audit queue.
-- `bank-account.tracker.performance.enabled`
-  - Turns on timing capture for the tracker's ingestion and audit publication.
+- `bank-account.tracker.performance.enabled` - Turns on timing capture for the tracker's ingestion and audit publication.
   - This is primarily for tests and benchmarking.
   - It is `false` by default for normal runtime because the production flow does not need to record those timings continuously.
-- `bank-account.tracker.submission.submission-size`
-  - The maximum number of transactions that can be included in a single audit submission.
+- `bank-account.tracker.submission.submission-size` - The maximum number of transactions that can be included in a single audit submission.
   - This is a runtime tuning value that can be adjusted to simulate different batch sizes.
-- `bank-account.tracker.submission.initial-buffer-count`
-  - The initial number of transactions that can be buffered before the tracker starts publishing audit submissions.
+- `bank-account.tracker.submission.initial-buffer-count` - The initial number of transactions that can be buffered before the tracker starts publishing audit submissions.
   - This is a runtime tuning value that can be adjusted to simulate different buffer sizes.
-- `bank-account.tracker.submission.max-buffer-count`
-  - The maximum number of transactions that can be buffered before the tracker starts publishing audit submissions.
+- `bank-account.tracker.submission.max-buffer-count` - The maximum number of transactions that can be buffered before the tracker starts publishing audit submissions.
   - This is a runtime tuning value that can be adjusted to simulate different buffer sizes.
-- `bank-account.tracker.submission.max-batch-total`
-  - The maximum total size (in bytes) of transactions that can be included in a single audit submission.
+- `bank-account.tracker.submission.max-batch-total` - The maximum total size (in bytes) of transactions that can be included in a single audit submission.
   - This is a runtime tuning value that can be adjusted to simulate different batch sizes.
 
 Shared queue defaults come from [`MessagingProperties.java`](C:/git/exercise-bank_account/libs/common-service/src/main/java/com/exercise/bankaccount/commonservice/config/MessagingProperties.java):

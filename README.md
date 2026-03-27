@@ -174,14 +174,16 @@ Tracker keys:
 - `bank-account.tracker.performance.enabled` - Turns on timing capture for the tracker's ingestion and audit publication.
   - This is primarily for tests and benchmarking.
   - It is `false` by default for normal runtime because the production flow does not need to record those timings continuously.
-- `bank-account.tracker.submission.submission-size` - The maximum number of transactions that can be included in a single audit submission.
-  - This is a runtime tuning value that can be adjusted to simulate different batch sizes.
+- `bank-account.tracker.submission.submission-size` - The number of transactions collected before one audit submission window is sealed.
+  - For this exercise the expected runtime value is `1000`.
+  - Tests may override it to a smaller number when exercising boundary cases more cheaply.
 - `bank-account.tracker.submission.initial-buffer-count` - The initial number of transactions that can be buffered before the tracker starts publishing audit submissions.
   - This is a runtime tuning value that can be adjusted to simulate different buffer sizes.
 - `bank-account.tracker.submission.max-buffer-count` - The maximum number of transactions that can be buffered before the tracker starts publishing audit submissions.
   - This is a runtime tuning value that can be adjusted to simulate different buffer sizes.
-- `bank-account.tracker.submission.max-batch-total` - The maximum total size (in bytes) of transactions that can be included in a single audit submission.
-  - This is a runtime tuning value that can be adjusted to simulate different batch sizes.
+- `bank-account.tracker.submission.max-batch-total` - The maximum absolute money value allowed in a single `AuditBatch`.
+  - Credits do not offset debits when this total is calculated.
+  - Tests may override it to a smaller value when exercising planner edge cases.
 
 Shared queue defaults come from [`MessagingProperties.java`](C:/git/exercise-bank_account/libs/common-service/src/main/java/com/exercise/bankaccount/commonservice/config/MessagingProperties.java):
 

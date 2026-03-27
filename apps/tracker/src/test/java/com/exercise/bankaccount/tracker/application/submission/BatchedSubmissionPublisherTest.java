@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.exercise.bankaccount.commonservice.config.MessagingProperties;
 import com.exercise.bankaccount.commonservice.config.QueueType;
+import com.exercise.bankaccount.tracker.application.performance.TrackerPerformanceCaptureService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -14,8 +15,12 @@ class BatchedSubmissionPublisherTest {
 		MessagingProperties messagingProperties = new MessagingProperties(
 				Map.of(QueueType.TRANSACTION, "transactions.queue", QueueType.AUDIT, "audit.queue"));
 		BatchedSubmissionPublisher publisher = new BatchedSubmissionPublisher(null, messagingProperties,
-				new ObjectMapper());
+				new ObjectMapper(), trackerPerformanceCaptureService());
 
 		assertEquals("audit.queue", messagingProperties.queueName(QueueType.AUDIT));
+	}
+
+	private static TrackerPerformanceCaptureService trackerPerformanceCaptureService() {
+		return TrackerPerformanceCaptureService.disabled(1_000);
 	}
 }

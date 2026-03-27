@@ -8,6 +8,8 @@ bank-account:
       transaction: bank-account.transactions
       audit: bank-account.audit
   tracker:
+    performance:
+      enabled: false
     submission:
       submission-size: 1000
       initial-buffer-count: 2

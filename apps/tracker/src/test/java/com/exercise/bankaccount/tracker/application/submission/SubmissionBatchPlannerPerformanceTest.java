@@ -16,14 +16,16 @@ class SubmissionBatchPlannerPerformanceTest {
 	private static final Duration EXACT_TIME_BUDGET = Duration.ofMillis(750);
 
 	private final SubmissionBatchPlanner firstFitDecreasingPlanner = new FirstFitDecreasingSubmissionBatchPlanner();
+	private final SubmissionBatchPlanner bestFitDecreasingPlanner = new BestFitDecreasingSubmissionBatchPlanner();
+	private final SubmissionBatchPlanner bestFitDecreasingLocalSearchPlanner = new BestFitDecreasingLocalSearchSubmissionBatchPlanner();
 	private final SubmissionBatchPlanner exactPlanner = new ExactSubmissionBatchPlanner();
 
 	@Test
 	void shouldBenchmarkPlannerTradeOffsAcrossIncreasingSubmissionSizes() {
-		benchmarkScenario("production-like", List.of("500000", "-200000", "300000", "-100000"),
-				List.of(4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48));
+		benchmarkScenario("tracker-e2e-like", List.of("500000", "-200000", "300000", "-100000"),
+				List.of(10_000, 25_000, 50_000, 75_000, 100_000));
 		benchmarkScenario("counterexample-rich", List.of("600000", "500000", "300000", "200000", "200000", "200000"),
-				List.of(6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72));
+				List.of(6, 12, 18, 24, 30, 36, 42, 48, 50, 60, 72, 75, 100, 150, 250, 500, 1_000));
 	}
 
 	private void benchmarkScenario(String scenarioName, List<String> repeatingPattern, List<Integer> sizes) {
@@ -35,21 +37,40 @@ class SubmissionBatchPlannerPerformanceTest {
 
 			BenchmarkResult ffdResult = benchmark(firstFitDecreasingPlanner, transactions);
 			assertBatchesRespectLimit(ffdResult.batches());
+			BenchmarkResult bfdResult = benchmark(bestFitDecreasingPlanner, transactions);
+			assertBatchesRespectLimit(bfdResult.batches());
+			BenchmarkResult bfdLocalSearchResult = benchmark(bestFitDecreasingLocalSearchPlanner, transactions);
+			assertBatchesRespectLimit(bfdLocalSearchResult.batches());
 
 			if (exactBudgetExceeded) {
-				System.out.printf("  %3d tx -> FFD: %3d batches in %4d us | exact skipped beyond %d ms budget%n", size,
-						ffdResult.batches().size(), ffdResult.elapsedMicros(), EXACT_TIME_BUDGET.toMillis());
+				System.out.printf(
+						"  %6d tx -> FFD: %4d batches in %8s | BFD: %4d batches in %8s | BFD+LS: %4d batches in %8s | exact skipped beyond %d ms budget%n",
+						size, ffdResult.batches().size(), ffdResult.elapsedDisplay(), bfdResult.batches().size(),
+						bfdResult.elapsedDisplay(), bfdLocalSearchResult.batches().size(),
+						bfdLocalSearchResult.elapsedDisplay(), EXACT_TIME_BUDGET.toMillis());
 				continue;
 			}
 
 			BenchmarkResult exactResult = benchmark(exactPlanner, transactions);
 			assertBatchesRespectLimit(exactResult.batches());
 			assertTrue(exactResult.batches().size() <= ffdResult.batches().size());
+			assertTrue(exactResult.batches().size() <= bfdResult.batches().size());
+			assertTrue(exactResult.batches().size() <= bfdLocalSearchResult.batches().size());
 
-			int improvement = ffdResult.batches().size() - exactResult.batches().size();
-			System.out.printf("  %3d tx -> FFD: %3d batches in %4d us | exact: %3d batches in %4d us | delta: %+d%n",
-					size, ffdResult.batches().size(), ffdResult.elapsedMicros(), exactResult.batches().size(),
-					exactResult.elapsedMicros(), improvement);
+			int ffdImprovement = ffdResult.batches().size() - exactResult.batches().size();
+			int bfdImprovement = bfdResult.batches().size() - exactResult.batches().size();
+			int bfdLocalSearchImprovement = bfdLocalSearchResult.batches().size() - exactResult.batches().size();
+			double exactToFfdRuntimeRatio = exactResult.elapsedNanos() / (double) Math.max(1L, ffdResult.elapsedNanos());
+			double exactToBfdRuntimeRatio = exactResult.elapsedNanos() / (double) Math.max(1L, bfdResult.elapsedNanos());
+			double exactToBfdLocalSearchRuntimeRatio = exactResult.elapsedNanos()
+					/ (double) Math.max(1L, bfdLocalSearchResult.elapsedNanos());
+			System.out.printf(
+					"  %6d tx -> FFD: %4d batches in %8s | BFD: %4d batches in %8s | BFD+LS: %4d batches in %8s | exact: %4d batches in %8s | delta vs FFD: %+d | delta vs BFD: %+d | delta vs BFD+LS: %+d | exact %.1fx slower than FFD | exact %.1fx slower than BFD | exact %.1fx slower than BFD+LS%n",
+					size, ffdResult.batches().size(), ffdResult.elapsedDisplay(), bfdResult.batches().size(),
+					bfdResult.elapsedDisplay(), bfdLocalSearchResult.batches().size(),
+					bfdLocalSearchResult.elapsedDisplay(), exactResult.batches().size(), exactResult.elapsedDisplay(),
+					ffdImprovement, bfdImprovement, bfdLocalSearchImprovement, exactToFfdRuntimeRatio,
+					exactToBfdRuntimeRatio, exactToBfdLocalSearchRuntimeRatio);
 
 			if (exactResult.elapsed().compareTo(EXACT_TIME_BUDGET) > 0) {
 				exactBudgetExceeded = true;
@@ -80,8 +101,29 @@ class SubmissionBatchPlannerPerformanceTest {
 	}
 
 	private record BenchmarkResult(List<AuditBatch> batches, Duration elapsed) {
-		private long elapsedMicros() {
-			return elapsed.toNanos() / 1_000;
+		private long elapsedNanos() {
+			return elapsed.toNanos();
+		}
+
+		private String elapsedDisplay() {
+			long nanos = elapsed.toNanos();
+			double micros = nanos / 1_000.0;
+			if (micros < 1_000.0) {
+				return String.format("%.0f us", micros);
+			}
+
+			double millis = nanos / 1_000_000.0;
+			if (millis < 1_000.0) {
+				return String.format("%.3f ms", millis);
+			}
+
+			double seconds = nanos / 1_000_000_000.0;
+			if (seconds < 60.0) {
+				return String.format("%.3f s", seconds);
+			}
+
+			double minutes = seconds / 60.0;
+			return String.format("%.3f m", minutes);
 		}
 	}
 }

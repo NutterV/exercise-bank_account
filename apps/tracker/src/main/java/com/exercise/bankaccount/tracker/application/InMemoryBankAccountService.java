@@ -2,6 +2,7 @@ package com.exercise.bankaccount.tracker.application;
 
 import com.exercise.bankaccount.common.model.Transaction;
 import com.exercise.bankaccount.tracker.api.BankAccountService;
+import com.exercise.bankaccount.tracker.application.performance.TrackerPerformanceCaptureService;
 import com.exercise.bankaccount.tracker.application.submission.SubmissionBufferCoordinator;
 import java.math.BigDecimal;
 import java.util.concurrent.atomic.AtomicReference;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class InMemoryBankAccountService implements BankAccountService {
 	private final AtomicReference<BigDecimal> balance = new AtomicReference<>(BigDecimal.ZERO);
+	private final TrackerPerformanceCaptureService trackerPerformanceCaptureService;
 	private final SubmissionBufferCoordinator submissionBufferCoordinator;
 
 	/**
@@ -23,8 +25,10 @@ public class InMemoryBankAccountService implements BankAccountService {
 	 * @param submissionBufferCoordinator
 	 *            coordinator that owns submission-buffer rotation and dispatch
 	 */
-	public InMemoryBankAccountService(SubmissionBufferCoordinator submissionBufferCoordinator) {
+	public InMemoryBankAccountService(SubmissionBufferCoordinator submissionBufferCoordinator,
+			TrackerPerformanceCaptureService trackerPerformanceCaptureService) {
 		this.submissionBufferCoordinator = submissionBufferCoordinator;
+		this.trackerPerformanceCaptureService = trackerPerformanceCaptureService;
 	}
 
 	/**
@@ -38,6 +42,7 @@ public class InMemoryBankAccountService implements BankAccountService {
 	public void processTransaction(Transaction transaction) {
 		balance.updateAndGet(currentBalance -> currentBalance.add(transaction.amount()));
 		submissionBufferCoordinator.record(transaction);
+		trackerPerformanceCaptureService.recordTransactionProcessed();
 	}
 
 	/**

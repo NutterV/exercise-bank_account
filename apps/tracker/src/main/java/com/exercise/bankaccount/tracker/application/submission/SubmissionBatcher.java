@@ -1,9 +1,9 @@
 package com.exercise.bankaccount.tracker.application.submission;
 
-import com.exercise.bankaccount.common.model.AuditBatch;
 import com.exercise.bankaccount.common.model.AuditSubmission;
 import com.exercise.bankaccount.common.model.Transaction;
 import com.exercise.bankaccount.tracker.application.config.TrackerSubmissionProperties;
+import com.exercise.bankaccount.tracker.application.performance.TrackerPerformanceCaptureService;
 import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
@@ -30,6 +30,7 @@ public class SubmissionBatcher implements SubmissionProcessor {
 	private final ExecutorService workerExecutor;
 	private final BigDecimal maxBatchTotal;
 	private final SubmissionBatchPlanner submissionBatchPlanner;
+	private final TrackerPerformanceCaptureService trackerPerformanceCaptureService;
 
 	/**
 	 * Creates the production batcher with one background batching worker.
@@ -41,9 +42,11 @@ public class SubmissionBatcher implements SubmissionProcessor {
 	 */
 	@Autowired
 	public SubmissionBatcher(TrackerSubmissionProperties trackerSubmissionProperties,
-			BatchedSubmissionPublisher batchedSubmissionPublisher) {
+			BatchedSubmissionPublisher batchedSubmissionPublisher,
+			TrackerPerformanceCaptureService trackerPerformanceCaptureService) {
 		this(trackerSubmissionProperties.maxBatchTotal(),
 				new FirstFitDecreasingSubmissionBatchPlanner(),
+				trackerPerformanceCaptureService,
 				auditSubmission -> publishSubmission(batchedSubmissionPublisher, auditSubmission),
 				Executors.newSingleThreadExecutor());
 	}
@@ -61,13 +64,22 @@ public class SubmissionBatcher implements SubmissionProcessor {
 	 */
 	SubmissionBatcher(BigDecimal maxBatchTotal, Consumer<AuditSubmission> auditSubmissionConsumer,
 			ExecutorService workerExecutor) {
-		this(maxBatchTotal, new FirstFitDecreasingSubmissionBatchPlanner(), auditSubmissionConsumer, workerExecutor);
+		this(maxBatchTotal, new FirstFitDecreasingSubmissionBatchPlanner(), TrackerPerformanceCaptureService.disabled(1),
+				auditSubmissionConsumer, workerExecutor);
 	}
 
 	SubmissionBatcher(BigDecimal maxBatchTotal, SubmissionBatchPlanner submissionBatchPlanner,
 			Consumer<AuditSubmission> auditSubmissionConsumer, ExecutorService workerExecutor) {
+		this(maxBatchTotal, submissionBatchPlanner, TrackerPerformanceCaptureService.disabled(1),
+				auditSubmissionConsumer, workerExecutor);
+	}
+
+	SubmissionBatcher(BigDecimal maxBatchTotal, SubmissionBatchPlanner submissionBatchPlanner,
+			TrackerPerformanceCaptureService trackerPerformanceCaptureService, Consumer<AuditSubmission> auditSubmissionConsumer,
+			ExecutorService workerExecutor) {
 		this.maxBatchTotal = maxBatchTotal;
 		this.submissionBatchPlanner = submissionBatchPlanner;
+		this.trackerPerformanceCaptureService = trackerPerformanceCaptureService;
 		this.auditSubmissionConsumer = auditSubmissionConsumer;
 		this.workerExecutor = workerExecutor;
 		this.workerExecutor.execute(this::runBatchingLoop);
@@ -97,7 +109,10 @@ public class SubmissionBatcher implements SubmissionProcessor {
 	}
 
 	AuditSubmission buildSubmission(List<Transaction> transactions) {
-		return new AuditSubmission(submissionBatchPlanner.plan(transactions, maxBatchTotal));
+		trackerPerformanceCaptureService.recordBatchingStarted();
+		AuditSubmission auditSubmission = new AuditSubmission(submissionBatchPlanner.plan(transactions, maxBatchTotal));
+		trackerPerformanceCaptureService.recordBatchingCompleted(auditSubmission.batches().size());
+		return auditSubmission;
 	}
 
 	private void runBatchingLoop() {

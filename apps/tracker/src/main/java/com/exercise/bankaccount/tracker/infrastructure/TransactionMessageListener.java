@@ -2,6 +2,7 @@ package com.exercise.bankaccount.tracker.infrastructure;
 
 import com.exercise.bankaccount.common.model.Transaction;
 import com.exercise.bankaccount.tracker.api.BankAccountService;
+import com.exercise.bankaccount.tracker.application.performance.TrackerPerformanceCaptureService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
@@ -21,6 +22,7 @@ public class TransactionMessageListener {
 
 	private final BankAccountService bankAccountService;
 	private final ObjectMapper objectMapper;
+	private final TrackerPerformanceCaptureService trackerPerformanceCaptureService;
 
 	/**
 	 * @param bankAccountService
@@ -28,9 +30,11 @@ public class TransactionMessageListener {
 	 * @param objectMapper
 	 *            JSON mapper used to deserialize transaction messages
 	 */
-	public TransactionMessageListener(BankAccountService bankAccountService, ObjectMapper objectMapper) {
+	public TransactionMessageListener(BankAccountService bankAccountService, ObjectMapper objectMapper,
+			TrackerPerformanceCaptureService trackerPerformanceCaptureService) {
 		this.bankAccountService = bankAccountService;
 		this.objectMapper = objectMapper;
+		this.trackerPerformanceCaptureService = trackerPerformanceCaptureService;
 	}
 
 	/**
@@ -45,7 +49,9 @@ public class TransactionMessageListener {
 	 */
 	@JmsListener(destination = "${bank-account.messaging.queues.transaction}")
 	public void onMessage(Message message) throws Exception {
-		bankAccountService.processTransaction(readTransaction(message));
+		Transaction transaction = readTransaction(message);
+		trackerPerformanceCaptureService.recordTransactionConsumed();
+		bankAccountService.processTransaction(transaction);
 	}
 
 	/**

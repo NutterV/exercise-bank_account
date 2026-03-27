@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.exercise.bankaccount.common.model.Transaction;
 import com.exercise.bankaccount.tracker.application.config.TrackerSubmissionProperties;
+import com.exercise.bankaccount.tracker.application.performance.TrackerPerformanceCaptureService;
 import com.exercise.bankaccount.tracker.application.submission.SubmissionBufferCoordinator;
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -13,7 +14,7 @@ class InMemoryBankAccountServiceTest {
 	@Test
 	void shouldKeepRunningBalanceOnAtomicAccumulatorWhileDelegatingSubmissionHandling() {
 		RecordingSubmissionBufferCoordinator coordinator = new RecordingSubmissionBufferCoordinator();
-		InMemoryBankAccountService service = new InMemoryBankAccountService(coordinator);
+		InMemoryBankAccountService service = new InMemoryBankAccountService(coordinator, trackerPerformanceCaptureService());
 
 		Transaction credit = transaction(BigDecimal.valueOf(125.75));
 		Transaction debit = transaction(BigDecimal.valueOf(-25.25));
@@ -30,7 +31,7 @@ class InMemoryBankAccountServiceTest {
 	@Test
 	void shouldAccumulateDecimalAmountsWithoutFloatingPointDrift() {
 		RecordingSubmissionBufferCoordinator coordinator = new RecordingSubmissionBufferCoordinator();
-		InMemoryBankAccountService service = new InMemoryBankAccountService(coordinator);
+		InMemoryBankAccountService service = new InMemoryBankAccountService(coordinator, trackerPerformanceCaptureService());
 
 		for (int index = 0; index < 10_000; index++) {
 			service.processTransaction(transaction(new BigDecimal("0.01")));
@@ -52,6 +53,10 @@ class InMemoryBankAccountServiceTest {
 		assertEquals(2, properties.initialBufferCount());
 		assertEquals(10, properties.maxBufferCount());
 		assertEquals(new java.math.BigDecimal("1000000"), properties.maxBatchTotal());
+	}
+
+	private static TrackerPerformanceCaptureService trackerPerformanceCaptureService() {
+		return TrackerPerformanceCaptureService.disabled(1_000);
 	}
 
 	private static final class RecordingSubmissionBufferCoordinator extends SubmissionBufferCoordinator {

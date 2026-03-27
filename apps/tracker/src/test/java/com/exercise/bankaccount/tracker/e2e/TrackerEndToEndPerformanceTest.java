@@ -8,6 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.exercise.bankaccount.common.model.AuditSubmission;
 import com.exercise.bankaccount.common.model.BalanceResponse;
 import com.exercise.bankaccount.common.model.Transaction;
+import com.exercise.bankaccount.tracker.application.performance.PerformanceCaptureSnapshot;
+import com.exercise.bankaccount.tracker.application.performance.SubmissionPerformanceSnapshot;
+import com.exercise.bankaccount.tracker.application.performance.TrackerPerformanceCaptureService;
 import com.exercise.bankaccount.tracker.TrackerApplication;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
@@ -57,6 +60,9 @@ class TrackerEndToEndPerformanceTest {
 	private ObjectMapper objectMapper;
 
 	@Autowired
+	private TrackerPerformanceCaptureService trackerPerformanceCaptureService;
+
+	@Autowired
 	private TestRestTemplate restTemplate;
 
 	@LocalServerPort
@@ -75,6 +81,7 @@ class TrackerEndToEndPerformanceTest {
 		registry.add("bank-account.tracker.submission.initial-buffer-count", () -> 2);
 		registry.add("bank-account.tracker.submission.max-buffer-count", () -> 10);
 		registry.add("bank-account.tracker.submission.max-batch-total", () -> "1000000");
+		registry.add("bank-account.tracker.performance.enabled", () -> "true");
 		registry.add("logging.level.org.apache.activemq.audit", () -> "ERROR");
 		registry.add("logging.level.org.apache.activemq.artemis", () -> "WARN");
 	}
@@ -100,6 +107,7 @@ class TrackerEndToEndPerformanceTest {
 				BigDecimal::add);
 		List<ExpectedSubmission> expectedSubmissions = expectedSubmissions(transactions);
 		Duration timeout = timeoutFor(transactionCount);
+		startCapture(transactionCount, expectedSubmissions.size());
 
 		long startedAt = System.nanoTime();
 		for (Transaction transaction : transactions) {
@@ -111,10 +119,13 @@ class TrackerEndToEndPerformanceTest {
 				}
 			});
 		}
+		long publishedAt = System.nanoTime();
 
+		PerformanceCaptureSnapshot captureSnapshot = awaitCaptureCompletion(timeout);
+		PerformanceCaptureSnapshot stoppedCapture = stopCapture();
 		List<AuditSubmission> actualSubmissions = awaitAuditSubmissions(expectedSubmissions.size(), timeout);
-		BalanceResponse balanceResponse = awaitBalance(expectedBalance.doubleValue(), timeout);
-		Duration elapsed = Duration.ofNanos(System.nanoTime() - startedAt);
+		BalanceResponse balanceResponse = restTemplate.getForObject("http://localhost:" + port + "/balances/current",
+				BalanceResponse.class);
 
 		assertEquals(expectedSubmissions.size(), actualSubmissions.size());
 		for (int index = 0; index < expectedSubmissions.size(); index++) {
@@ -132,24 +143,50 @@ class TrackerEndToEndPerformanceTest {
 		assertNotNull(balanceResponse);
 		assertEquals(expectedBalance.doubleValue(), balanceResponse.balance());
 		assertNull(jmsTemplate.receive(AUDIT_QUEUE), "Audit queue should be empty after consuming expected submissions");
+		assertTrue(captureSnapshot.captureComplete(), "Tracker capture should reach all expected milestones");
+		assertEquals(transactionCount, stoppedCapture.processedTransactionCount());
+		assertEquals(expectedSubmissions.size(), stoppedCapture.publishedSubmissionCount());
 
-		System.out.printf("Tracker E2E benchmark: %d transactions -> %d submissions in %d ms%n", transactionCount,
-				actualSubmissions.size(), elapsed.toMillis());
+		Duration publishDuration = Duration.ofNanos(publishedAt - startedAt);
+		Duration fullIngestDuration = Duration.ofNanos(
+				captureSnapshot.lastTransactionProcessedAtNanos() - captureSnapshot.firstTransactionConsumedAtNanos());
+		Duration totalDuration = Duration
+				.ofNanos(captureSnapshot.lastSubmissionPublishedAtNanos() - captureSnapshot.firstTransactionConsumedAtNanos());
+
+		System.out.printf("Tracker E2E benchmark: %d transactions -> publish %d ms, full ingest %d ms, total %d ms%n",
+				transactionCount, publishDuration.toMillis(), fullIngestDuration.toMillis(), totalDuration.toMillis());
+		for (SubmissionPerformanceSnapshot submission : stoppedCapture.submissions()) {
+			Duration packingDuration = durationBetween(submission.batchingStartedAtNanos(),
+					submission.batchingCompletedAtNanos());
+			Duration firstConsumedToPublishedDuration = durationBetween(submission.firstTransactionConsumedAtNanos(),
+					submission.publishedAtNanos());
+			System.out.printf(
+					"  submission %d -> pack %d ms, first-consumed-to-published %d ms, batches %d%n",
+					submission.submissionIndex(), packingDuration.toMillis(), firstConsumedToPublishedDuration.toMillis(),
+					submission.publishedBatchCount());
+		}
 	}
 
-	private BalanceResponse awaitBalance(double expectedBalance, Duration timeout) throws InterruptedException {
+	private void startCapture(int expectedTransactionCount, int expectedSubmissionCount) {
+		trackerPerformanceCaptureService.startCapture(expectedTransactionCount, expectedSubmissionCount);
+	}
+
+	private PerformanceCaptureSnapshot awaitCaptureCompletion(Duration timeout) throws InterruptedException {
 		long deadline = System.nanoTime() + timeout.toNanos();
 
 		while (System.nanoTime() < deadline) {
-			BalanceResponse response = restTemplate.getForObject("http://localhost:" + port + "/balances/current",
-					BalanceResponse.class);
-			if (response != null && response.balance() == expectedBalance) {
-				return response;
+			PerformanceCaptureSnapshot snapshot = trackerPerformanceCaptureService.currentCapture();
+			if (snapshot != null && snapshot.captureComplete()) {
+				return snapshot;
 			}
 			Thread.sleep(25L);
 		}
 
-		return restTemplate.getForObject("http://localhost:" + port + "/balances/current", BalanceResponse.class);
+		return trackerPerformanceCaptureService.currentCapture();
+	}
+
+	private PerformanceCaptureSnapshot stopCapture() {
+		return trackerPerformanceCaptureService.stopCapture();
 	}
 
 	private List<AuditSubmission> awaitAuditSubmissions(int expectedCount, Duration timeout) throws Exception {
@@ -166,6 +203,13 @@ class TrackerEndToEndPerformanceTest {
 		}
 
 		return submissions;
+	}
+
+	private Duration durationBetween(long startedAtNanos, long finishedAtNanos) {
+		if (startedAtNanos == 0L || finishedAtNanos == 0L) {
+			return Duration.ZERO;
+		}
+		return Duration.ofNanos(Math.max(0L, finishedAtNanos - startedAtNanos));
 	}
 
 	private void drainQueue(String queueName) {
